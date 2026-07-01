@@ -1,10 +1,15 @@
-package net.kenji.epic_colonies.patch;
+package net.kenji.epic_colonies.gameasset.patch;
 
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
+import com.minecolonies.core.client.model.MaleCitizenModel;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
+import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import yesman.epicfight.api.animation.Animator;
 import yesman.epicfight.api.animation.LivingMotions;
 import yesman.epicfight.gameasset.Animations;
+import yesman.epicfight.gameasset.Armatures;
+import yesman.epicfight.model.armature.HumanoidArmature;
 import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
 
@@ -17,6 +22,19 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     @Override
     public boolean overrideRender() {
         return true;
+    }
+
+    @Override
+    public void onAddedToWorld() {
+        super.onAddedToWorld();
+        if(this.getOriginal().getAttribute(Attributes.ATTACK_KNOCKBACK) == null){
+
+        }
+    }
+
+    @Override
+    public HumanoidArmature getArmature() {
+        return !this.getOriginal().isFemale() ? EpicColoniesArmatures.CITIZEN_MALE.get() : EpicColoniesArmatures.CITIZEN_FEMALE.get();
     }
 
     @Override

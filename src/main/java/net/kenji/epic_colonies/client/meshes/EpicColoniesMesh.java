@@ -9,7 +9,7 @@ import yesman.epicfight.client.mesh.HumanoidMesh;
 import java.util.List;
 import java.util.Map;
 
-public class EpicColoniesMesh extends SkinnedMesh {
+public class EpicColoniesMesh extends HumanoidMesh {
     public final SkinnedMeshPart main;
     public EpicColoniesMesh(@Nullable Map<String, Number[]> arrayMap, @Nullable Map<MeshPartDefinition, List<VertexBuilder>> partBuilders, @Nullable SkinnedMesh parent, RenderProperties properties) {
         super(arrayMap, partBuilders, parent, properties);
