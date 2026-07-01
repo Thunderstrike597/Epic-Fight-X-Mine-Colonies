@@ -28,8 +28,8 @@ import java.util.Map;
 public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntityCitizen, CitizenEntityPatch<AbstractEntityCitizen>, CitizenModel<AbstractEntityCitizen>, RenderBipedCitizen, EpicColoniesMesh> {
     public PCitizenRenderer(Meshes.MeshAccessor<EpicColoniesMesh> mesh, EntityRendererProvider.Context context, EntityType<?> entityType) {
         super(context, entityType);
-        this.addPatchedLayer(ItemInHandLayer.class, new PatchedItemInHandLayer());
-        this.addPatchedLayer(CitizenArmorLayer.class, new WearableItemLayer(mesh, false, context.getModelManager()));    }
+        this.addPatchedLayer(ItemInHandLayer.class, new PatchedItemInHandLayer<>());
+        this.addPatchedLayer(CitizenArmorLayer.class, new WearableItemLayer<>(mesh, false, context.getModelManager()));    }
 
     @Override
     public AssetAccessor<EpicColoniesMesh> getMeshProvider(CitizenEntityPatch<AbstractEntityCitizen> entitypatch) {

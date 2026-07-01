@@ -4,8 +4,11 @@ import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.core.client.model.MaleCitizenModel;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
+import net.kenji.epic_colonies.gameasset.armatures.CitizenArmature;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import yesman.epicfight.api.animation.Animator;
+import yesman.epicfight.api.animation.Joint;
 import yesman.epicfight.api.animation.LivingMotions;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.gameasset.Armatures;
@@ -31,7 +34,13 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
         }
     }
-
+    @Override
+    public Joint getParentJointOfHand(InteractionHand hand) {
+        if(this.getArmature() instanceof CitizenArmature citizenArmature){
+            return hand == InteractionHand.MAIN_HAND ? citizenArmature.rightToolJoint() : citizenArmature.leftToolJoint();
+        }
+        return (Joint)this.parentJointOfHands.getOrDefault(hand, this.armature.rootJoint);
+    }
     @Override
     public HumanoidArmature getArmature() {
         return !this.getOriginal().isFemale() ? EpicColoniesArmatures.CITIZEN_MALE.get() : EpicColoniesArmatures.CITIZEN_FEMALE.get();

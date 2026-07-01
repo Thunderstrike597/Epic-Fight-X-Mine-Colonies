@@ -26,4 +26,12 @@ public class CitizenArmature extends HumanoidArmature {
 
 
     }
+
+    public Joint leftToolJoint() {
+        return this.toolL;
+    }
+
+    public Joint rightToolJoint() {
+        return this.toolR;
+    }
 }
