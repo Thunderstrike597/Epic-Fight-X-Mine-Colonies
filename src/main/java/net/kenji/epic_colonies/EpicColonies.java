@@ -6,6 +6,7 @@ import com.minecolonies.core.client.model.MaleCitizenModel;
 import com.mojang.logging.LogUtils;
 import net.kenji.epic_colonies.client.events.EpicFightClientEvents;
 import net.kenji.epic_colonies.events.ModEvents;
+import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.food.FoodProperties;
@@ -51,6 +52,8 @@ public class EpicColonies {
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(ModEvents::registerPatchedEntities);
+        modEventBus.addListener(EpicColoniesAnimations::registerAnimations);
+
         modEventBus.addListener(ModEvents::commonSetup);
 
         // Register ourselves for server and other game events we are interested in

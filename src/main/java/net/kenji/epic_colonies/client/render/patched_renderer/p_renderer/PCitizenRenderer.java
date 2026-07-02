@@ -9,14 +9,12 @@ import com.minecolonies.api.colony.jobs.registry.JobEntry;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.core.client.render.CitizenArmorLayer;
 import com.minecolonies.core.client.render.RenderBipedCitizen;
-import com.minecolonies.core.colony.CitizenDataView;
-import net.kenji.epic_colonies.client.EpicColoniesMeshes;
+import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMesh;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.world.entity.EntityType;
-import org.jline.utils.Log;
 import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.model.Meshes;
 import yesman.epicfight.client.renderer.patched.entity.PatchedLivingEntityRenderer;
@@ -38,7 +36,8 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
 
     public AssetAccessor<EpicColoniesMesh> getCitizenMesh(AbstractEntityCitizen citizen, boolean isMale) {
         Map<JobEntry, Meshes.MeshAccessor<EpicColoniesMesh>> meshMap = isMale ? EpicColoniesMeshes.jobMeshMapMale : EpicColoniesMeshes.jobMeshMapFemale;
-        Meshes.MeshAccessor<EpicColoniesMesh> defaultMesh = isMale ? EpicColoniesMeshes.CITIZEN_MALE : EpicColoniesMeshes.CITIZEN_FEMALE;
+        Meshes.MeshAccessor<EpicColoniesMesh> citizenMesh = isMale ? EpicColoniesMeshes.CITIZEN_MALE : EpicColoniesMeshes.CITIZEN_FEMALE;
+        Meshes.MeshAccessor<EpicColoniesMesh> defaultMesh = isMale ? EpicColoniesMeshes.DEFAULT_MALE : EpicColoniesMeshes.DEFAULT_FEMALE;
 
         JobEntry jobEntry = null;
 
@@ -56,7 +55,7 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
             }
         }
 
-        if (jobEntry == null) return defaultMesh;
+        if (jobEntry == null) return citizenMesh;
         return meshMap.getOrDefault(jobEntry, defaultMesh);
     }
 

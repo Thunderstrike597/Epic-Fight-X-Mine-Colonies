@@ -2,11 +2,10 @@ package net.kenji.epic_colonies.events;
 
 import com.minecolonies.api.entity.ModEntities;
 import net.kenji.epic_colonies.EpicColonies;
-import net.kenji.epic_colonies.client.EpicColoniesMeshes;
+import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
