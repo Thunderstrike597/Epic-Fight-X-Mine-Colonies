@@ -31,7 +31,7 @@ public class ModEvents {
     }
 
     private static void registerEntityTypeArmatures() {
-        Armatures.registerEntityTypeArmature(ModEntities.CITIZEN, EpicColoniesArmatures.CITIZEN_MALE);
+        Armatures.registerEntityTypeArmature(ModEntities.CITIZEN, EpicColoniesArmatures.CITIZEN_REGULAR);
     }
     @SubscribeEvent
     public static void existingEntityAttributes(EntityAttributeModificationEvent event){

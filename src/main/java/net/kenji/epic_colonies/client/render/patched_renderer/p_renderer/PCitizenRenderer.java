@@ -38,18 +38,23 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
         Map<JobEntry, Meshes.MeshAccessor<EpicColoniesMesh>> meshMap = isMale ? EpicColoniesMeshes.jobMeshMapMale : EpicColoniesMeshes.jobMeshMapFemale;
         Meshes.MeshAccessor<EpicColoniesMesh> citizenMesh = isMale ? EpicColoniesMeshes.CITIZEN_MALE : EpicColoniesMeshes.CITIZEN_FEMALE;
         Meshes.MeshAccessor<EpicColoniesMesh> defaultMesh = isMale ? EpicColoniesMeshes.DEFAULT_MALE : EpicColoniesMeshes.DEFAULT_FEMALE;
+        Meshes.MeshAccessor<EpicColoniesMesh> childMesh = isMale ? EpicColoniesMeshes.CHILD_MALE : EpicColoniesMeshes.CHILD_FEMALE;
+
 
         JobEntry jobEntry = null;
-
         if (citizen.level().isClientSide) {
             ICitizenDataView view = citizen.getCitizenDataView();
             if (view != null) {
+                if(view.isChild())
+                    return childMesh;
                 IJobView jobView = view.getJobView();
                 if (jobView != null) jobEntry = jobView.getEntry();
             }
         } else {
             ICitizenData data = citizen.getCitizenData();
             if (data != null) {
+                if(data.isChild())
+                    return childMesh;
                 IJob<?> job = data.getJob();
                 if (job != null) jobEntry = job.getJobRegistryEntry();
             }

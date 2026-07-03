@@ -1,33 +1,26 @@
 package net.kenji.epic_colonies.gameasset.patch;
 
+import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
+import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
-import com.minecolonies.core.client.model.MaleCitizenModel;
-import com.minecolonies.core.entity.citizen.EntityCitizen;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.armatures.CitizenArmature;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.item.SwordItem;
 import net.minecraftforge.event.entity.living.LivingEvent;
-import org.jline.utils.Log;
 import yesman.epicfight.api.animation.AnimationPlayer;
 import yesman.epicfight.api.animation.Animator;
 import yesman.epicfight.api.animation.Joint;
 import yesman.epicfight.api.animation.LivingMotions;
 import yesman.epicfight.api.client.animation.Layer;
 import yesman.epicfight.gameasset.Animations;
-import yesman.epicfight.gameasset.Armatures;
 import yesman.epicfight.gameasset.MobCombatBehaviors;
 import yesman.epicfight.model.armature.HumanoidArmature;
 import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
-import yesman.epicfight.world.entity.ai.goal.AnimatedAttackGoal;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
-import yesman.epicfight.world.entity.ai.goal.TargetChasingGoal;
 
 public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends HumanoidMobPatch<AbstractEntityCitizen> {
 
@@ -58,9 +51,8 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
     @Override
     public HumanoidArmature getArmature() {
-        return !this.getOriginal().isFemale() ? EpicColoniesArmatures.CITIZEN_MALE.get() : EpicColoniesArmatures.CITIZEN_FEMALE.get();
+        return !this.getOriginal().isFemale() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : EpicColoniesArmatures.CITIZEN_LOW_EYES.get();
     }
-
 
     @Override
     protected CombatBehaviors.Builder<HumanoidMobPatch<?>> getHoldingItemWeaponMotionBuilder() {
@@ -68,6 +60,30 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
             return MobCombatBehaviors.SKELETON_SWORD;
         }
         return super.getHoldingItemWeaponMotionBuilder();
+    }
+
+    @Override
+    public void updateMotion(boolean b) {
+        AbstractEntityCitizen citizen = this.getOriginal();
+        IState state = citizen.getEntityStateController().getState();
+        if(citizen.getPose() == Pose.SITTING){
+            this.currentLivingMotion = LivingMotions.SIT;
+            this.currentCompositeMotion = LivingMotions.SIT;
+            return;
+        }
+        if(state == CitizenAIState.EATING){
+            this.currentLivingMotion = LivingMotions.EAT;
+            this.currentCompositeMotion = LivingMotions.EAT;
+            return;
+        }
+        if(state == CitizenAIState.SLEEP){
+            this.currentLivingMotion = LivingMotions.SLEEP;
+            this.currentCompositeMotion = LivingMotions.SLEEP;
+            return;
+        }
+
+
+        super.commonMobUpdateMotion(b);
     }
 
     @Override
@@ -79,11 +95,9 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         if(highestAnimPlayer != null){
             if(highestAnimPlayer.getAnimation() == null || highestAnimPlayer.getAnimation().get() != EpicColoniesAnimations.CITIZEN_BLINK.get()){
                 animator.playAnimationInstantly(EpicColoniesAnimations.CITIZEN_BLINK);
-                Log.info("Logging Anim Play! | Anim:" + highestAnimPlayer.getAnimation().get());
             }
             if(middleAnimPlayer.getAnimation() == null || middleAnimPlayer.getAnimation().get() != EpicColoniesAnimations.CITIZEN_EYES_MOVE.get()){
                 animator.playAnimationInstantly(EpicColoniesAnimations.CITIZEN_EYES_MOVE);
-                Log.info("Logging Anim Play! | Anim:" + middleAnimPlayer.getAnimation().get());
             }
         }
     }
@@ -103,12 +117,5 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         animator.addLivingAnimation(LivingMotions.SHOT, Animations.BIPED_BOW_SHOT);
         animator.addLivingAnimation(LivingMotions.DRINK, Animations.BIPED_DRINK);
         animator.addLivingAnimation(LivingMotions.EAT, Animations.BIPED_EAT);
-    }
-
-
-
-    @Override
-    public void updateMotion(boolean b) {
-        super.commonMobUpdateMotion(b);
     }
 }

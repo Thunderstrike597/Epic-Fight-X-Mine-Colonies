@@ -20,12 +20,15 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
     public static final Meshes.MeshAccessor<EpicColoniesMesh> DEFAULT_MALE;
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> CITIZEN_MALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> CHILD_MALE;
+
     public static final Meshes.MeshAccessor<EpicColoniesMesh> BUILDER_MALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> KNIGHT_MALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> COOK_MALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> BAKER_MALE;
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> DEFAULT_FEMALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> CHILD_FEMALE;
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> CITIZEN_FEMALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> BUILDER_FEMALE;
@@ -34,21 +37,23 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
     public static final Meshes.MeshAccessor<EpicColoniesMesh> BAKER_FEMALE;
 
     static {
-        CITIZEN_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
-        DEFAULT_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/default_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        DEFAULT_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/default_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        CITIZEN_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/citizen_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        CHILD_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/child_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
 
-        BUILDER_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/builder_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
-        KNIGHT_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/knight_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
-        COOK_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/cook_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
-        BAKER_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/baker_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        BUILDER_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/builder_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        KNIGHT_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/knight_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        COOK_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/cook_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        BAKER_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/baker_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
 
-        CITIZEN_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
-        DEFAULT_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/default_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        DEFAULT_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/default_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        CITIZEN_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/citizen_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        CHILD_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/child_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
 
-        BUILDER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/builder_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
-        KNIGHT_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/knight_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
-        COOK_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/cook_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
-        BAKER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/baker_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        BUILDER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/builder_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        KNIGHT_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/knight_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        COOK_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/cook_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        BAKER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/baker_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
 
     }
 
