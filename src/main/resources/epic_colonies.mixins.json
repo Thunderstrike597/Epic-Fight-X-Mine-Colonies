@@ -5,6 +5,8 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "epic_colonies.refmap.json",
   "mixins": [
+    "MixinAttackMoveAiRaider",
+    "AccessorTargetAi"
   ],
   "client": [
   ],

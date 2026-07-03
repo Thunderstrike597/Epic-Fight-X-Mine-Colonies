@@ -2,6 +2,7 @@ package net.kenji.epic_colonies.events;
 
 import com.minecolonies.api.entity.ModEntities;
 import net.kenji.epic_colonies.EpicColonies;
+import net.kenji.epic_colonies.api.MobPatchFactory;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
@@ -16,27 +17,34 @@ import yesman.epicfight.gameasset.Armatures;
 
 @Mod.EventBusSubscriber(modid = EpicColonies.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModEvents {
-    @SubscribeEvent
+
     public static void registerPatchedEntities(EntityPatchRegistryEvent event) {
-        event.getTypeEntry().put(ModEntities.CITIZEN, entity -> CitizenEntityPatch::new);
+        for (MobPatchFactory.MobPatchDefinitions def : MobPatchFactory.mobPatches) {
+            event.getTypeEntry().put(def.entityType, def.mobPatch);
+        }
     }
 
-    @SubscribeEvent
     public static void commonSetup(FMLCommonSetupEvent event) {
         event.enqueueWork(ModEvents::registerEntityTypeArmatures);
     }
+
+
+
+    private static void registerEntityTypeArmatures() {
+        for (MobPatchFactory.MobPatchDefinitions def : MobPatchFactory.mobPatches) {
+            Armatures.registerEntityTypeArmature(def.entityType, def.armature);
+        }
+    }
+
     @SubscribeEvent
     public static void loadComplete(FMLLoadCompleteEvent event) {
         event.enqueueWork(EpicColoniesMeshes::buildJobMeshMaps);
-    }
-
-    private static void registerEntityTypeArmatures() {
-        Armatures.registerEntityTypeArmature(ModEntities.CITIZEN, EpicColoniesArmatures.CITIZEN_REGULAR);
     }
     @SubscribeEvent
     public static void existingEntityAttributes(EntityAttributeModificationEvent event){
 
         event.add(ModEntities.CITIZEN, Attributes.ATTACK_KNOCKBACK, 1);
+        event.add(ModEntities.NORSEMEN_CHIEF, Attributes.ATTACK_KNOCKBACK, 1);
 
     }
 

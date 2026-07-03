@@ -1,10 +1,10 @@
 package net.kenji.epic_colonies.gameasset.patch;
 
-import com.minecolonies.api.client.render.modeltype.NorsemenModel;
 import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
-import com.minecolonies.core.entity.mobs.camp.norsemen.EntityNorsemenChief;
+import com.minecolonies.api.entity.mobs.AbstractEntityMinecoloniesMonster;
+import com.minecolonies.api.entity.mobs.vikings.AbstractEntityNorsemenRaider;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.armatures.CitizenArmature;
@@ -24,9 +24,9 @@ import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
 
-public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends HumanoidMobPatch<AbstractEntityCitizen> {
+public class NorsemanRaiderPatch<E extends AbstractEntityMinecoloniesMonster> extends HumanoidMobPatch<AbstractEntityMinecoloniesMonster> {
 
-    public CitizenEntityPatch() {
+    public NorsemanRaiderPatch() {
         super(Factions.VILLAGER);
     }
 
@@ -53,7 +53,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
     @Override
     public HumanoidArmature getArmature() {
-        return !this.getOriginal().isFemale() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : EpicColoniesArmatures.CITIZEN_LOW_EYES.get();
+        return EpicColoniesArmatures.CITIZEN_REGULAR.get();
     }
 
     @Override
@@ -66,26 +66,6 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
     @Override
     public void updateMotion(boolean b) {
-        AbstractEntityCitizen citizen = this.getOriginal();
-        IState state = citizen.getEntityStateController().getState();
-        if(citizen.getPose() == Pose.SITTING){
-            this.currentLivingMotion = LivingMotions.SIT;
-            this.currentCompositeMotion = LivingMotions.SIT;
-            return;
-        }
-        if(state == CitizenAIState.EATING){
-            this.currentLivingMotion = LivingMotions.EAT;
-            this.currentCompositeMotion = LivingMotions.EAT;
-            return;
-        }
-        if(state == CitizenAIState.SLEEP){
-            this.currentLivingMotion = LivingMotions.SLEEP;
-            this.currentCompositeMotion = LivingMotions.SLEEP;
-            return;
-        }
-
-
-
         super.commonMobUpdateMotion(b);
     }
 

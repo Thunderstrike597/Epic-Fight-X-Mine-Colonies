@@ -5,6 +5,7 @@ import com.minecolonies.core.client.model.FemaleCitizenModel;
 import com.minecolonies.core.client.model.MaleCitizenModel;
 import com.mojang.logging.LogUtils;
 import net.kenji.epic_colonies.client.events.EpicFightClientEvents;
+import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
 import net.kenji.epic_colonies.events.ModEvents;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.minecraft.client.Minecraft;
@@ -29,6 +30,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.registries.DeferredRegister;
@@ -50,7 +52,6 @@ public class EpicColonies {
     public EpicColonies() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         // Register the commonSetup method for modloading
-        modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(ModEvents::registerPatchedEntities);
         modEventBus.addListener(EpicColoniesAnimations::registerAnimations);
 
@@ -62,9 +63,7 @@ public class EpicColonies {
             modEventBus.addListener(EpicFightClientEvents::registerPatchedEntityRenderers);        }
     }
 
-    private void commonSetup(final FMLCommonSetupEvent event) {
 
-    }
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
     @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
