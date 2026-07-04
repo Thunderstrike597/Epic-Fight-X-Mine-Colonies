@@ -36,11 +36,17 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
     public static final Meshes.MeshAccessor<EpicColoniesMesh> COOK_FEMALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> BAKER_FEMALE;
 
-    public static final Meshes.MeshAccessor<EpicColoniesMesh> NORSEMAN_CHIEF;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> NORSEMAN_ARCHER;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> NORSEMAN_CHIEF;
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> AMAZON;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> AMAZON_SPEARMAN;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> AMAZON_CHIEF;
+
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> MUMMY;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> PHARAO;
+
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> SHIELDMAIDEN;
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> HUMANOID_RAIDER;
 
@@ -64,11 +70,17 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
         COOK_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/cook_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         BAKER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/baker_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
 
-        NORSEMAN_CHIEF = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/raider/norseman_chief", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         NORSEMAN_ARCHER = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/raider/norseman_archer", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        NORSEMAN_CHIEF = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/raider/norseman_chief", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
 
         AMAZON = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/raider/amazon", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        AMAZON_SPEARMAN = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/raider/amazon_spearman", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         AMAZON_CHIEF = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/raider/amazon_chief", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+
+        MUMMY = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/raider/mummy", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        PHARAO = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/raider/pharao", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+
+        SHIELDMAIDEN = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/raider/shieldmaiden", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
 
         HUMANOID_RAIDER = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/raider/barbarian", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
 

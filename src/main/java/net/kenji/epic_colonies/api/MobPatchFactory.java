@@ -73,6 +73,18 @@ public class MobPatchFactory {
                 (context, type) -> new NorsemanChiefPatchRenderer((EntityRendererProvider.Context) context, type)
         ));
         mobPatches.add(new MobPatchDefinitions(
+                ModEntities.SHIELDMAIDEN,
+                EpicColoniesArmatures.CITIZEN_LOW_EYES,
+                (e) -> MinecoloniesMonsterPatch::new,
+                (context, type) -> new ShieldmaidenPatchRenderer((EntityRendererProvider.Context) context, type)
+        ));
+        mobPatches.add(new MobPatchDefinitions(
+                ModEntities.CAMP_SHIELDMAIDEN,
+                EpicColoniesArmatures.CITIZEN_LOW_EYES,
+                (e) -> MinecoloniesMonsterPatch::new,
+                (context, type) -> new ShieldmaidenPatchRenderer((EntityRendererProvider.Context) context, type)
+        ));
+        mobPatches.add(new MobPatchDefinitions(
                 ModEntities.AMAZON,
                 EpicColoniesArmatures.CITIZEN_REGULAR,
                 (e) -> MinecoloniesMonsterPatch::new,
@@ -90,11 +102,49 @@ public class MobPatchFactory {
                 (e) -> MinecoloniesMonsterPatch::new,
                 (context, type) -> new AmazonChiefPatchRenderer((EntityRendererProvider.Context) context, type)
         ));
+
         mobPatches.add(new MobPatchDefinitions(
                 ModEntities.CAMP_AMAZONCHIEF,
                 EpicColoniesArmatures.CITIZEN_REGULAR,
                 (e) -> MinecoloniesMonsterPatch::new,
                 (context, type) -> new AmazonChiefPatchRenderer((EntityRendererProvider.Context) context, type)
+        ));
+
+        mobPatches.add(new MobPatchDefinitions(
+                ModEntities.MUMMY,
+                EpicColoniesArmatures.CITIZEN_REGULAR,
+                (e) -> MinecoloniesMonsterPatch::new,
+                (context, type) -> new MummyPatchRenderer((EntityRendererProvider.Context) context, type)
+        ));
+        mobPatches.add(new MobPatchDefinitions(
+                ModEntities.CAMP_MUMMY,
+                EpicColoniesArmatures.CITIZEN_REGULAR,
+                (e) -> MinecoloniesMonsterPatch::new,
+                (context, type) -> new MummyPatchRenderer((EntityRendererProvider.Context) context, type)
+        ));
+        mobPatches.add(new MobPatchDefinitions(
+                ModEntities.ARCHERMUMMY,
+                EpicColoniesArmatures.CITIZEN_REGULAR,
+                (e) -> MinecoloniesMonsterPatch::new,
+                (context, type) -> new ArcherMummyPatchRenderer((EntityRendererProvider.Context) context, type)
+        ));
+        mobPatches.add(new MobPatchDefinitions(
+                ModEntities.CAMP_ARCHERMUMMY,
+                EpicColoniesArmatures.CITIZEN_REGULAR,
+                (e) -> MinecoloniesMonsterPatch::new,
+                (context, type) -> new ArcherMummyPatchRenderer((EntityRendererProvider.Context) context, type)
+        ));
+        mobPatches.add(new MobPatchDefinitions(
+                ModEntities.PHARAO,
+                EpicColoniesArmatures.CITIZEN_REGULAR,
+                (e) -> MinecoloniesMonsterPatch::new,
+                (context, type) -> new PharaoPatchRenderer((EntityRendererProvider.Context) context, type)
+        ));
+        mobPatches.add(new MobPatchDefinitions(
+                ModEntities.CAMP_PHARAO,
+                EpicColoniesArmatures.CITIZEN_REGULAR,
+                (e) -> MinecoloniesMonsterPatch::new,
+                (context, type) -> new PharaoPatchRenderer((EntityRendererProvider.Context) context, type)
         ));
         mobPatches.add(new MobPatchDefinitions(
                 ModEntities.BARBARIAN,
