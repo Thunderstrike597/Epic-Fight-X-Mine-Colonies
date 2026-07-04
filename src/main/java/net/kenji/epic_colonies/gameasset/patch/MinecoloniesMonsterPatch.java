@@ -1,15 +1,10 @@
 package net.kenji.epic_colonies.gameasset.patch;
 
-import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
-import com.minecolonies.api.entity.ai.statemachine.states.IState;
-import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.mobs.AbstractEntityMinecoloniesMonster;
-import com.minecolonies.api.entity.mobs.vikings.AbstractEntityNorsemenRaider;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.armatures.CitizenArmature;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.Pose;
 import net.minecraft.world.item.SwordItem;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import yesman.epicfight.api.animation.AnimationPlayer;
@@ -24,9 +19,9 @@ import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
 
-public class NorsemanRaiderPatch<E extends AbstractEntityMinecoloniesMonster> extends HumanoidMobPatch<AbstractEntityMinecoloniesMonster> {
+public class MinecoloniesMonsterPatch<E extends AbstractEntityMinecoloniesMonster> extends HumanoidMobPatch<AbstractEntityMinecoloniesMonster> {
 
-    public NorsemanRaiderPatch() {
+    public MinecoloniesMonsterPatch() {
         super(Factions.VILLAGER);
     }
 

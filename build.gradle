@@ -224,7 +224,7 @@ java {
 
 // -------------------- Dev Jar (DEOBF) --------------------
 tasks.named('jar', Jar).configure {
-    archiveBaseName = "MobsPlus-Forge-EFM-${epic_fight_version}"
+    archiveBaseName = "EpicColonies-Forge-EFM-${epic_fight_version}"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
         attributes([
@@ -262,7 +262,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId = 'net.kenji'
-            artifactId = 'epic-fight-mobs-plus-efm-20-14-4'
+            artifactId = 'epic-colonies-efm-20-14-4'
             version = '1.4.0'
 
 
