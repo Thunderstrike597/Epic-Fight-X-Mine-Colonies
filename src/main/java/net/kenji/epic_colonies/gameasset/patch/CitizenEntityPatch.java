@@ -1,16 +1,18 @@
 package net.kenji.epic_colonies.gameasset.patch;
 
-import com.minecolonies.api.client.render.modeltype.NorsemenModel;
 import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
-import com.minecolonies.core.entity.mobs.camp.norsemen.EntityNorsemenChief;
+import com.minecolonies.core.entity.ai.minimal.EntityAICitizenAvoidEntity;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
+import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
 import net.kenji.epic_colonies.gameasset.armatures.CitizenArmature;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import yesman.epicfight.api.animation.AnimationPlayer;
 import yesman.epicfight.api.animation.Animator;
@@ -20,12 +22,18 @@ import yesman.epicfight.api.client.animation.Layer;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.gameasset.MobCombatBehaviors;
 import yesman.epicfight.model.armature.HumanoidArmature;
+import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
+import yesman.epicfight.world.capabilities.item.CapabilityItem;
+import yesman.epicfight.world.capabilities.item.WeaponCategory;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
+import yesman.epicfight.world.item.DaggerItem;
+import yesman.epicfight.world.item.GreatswordItem;
+import yesman.epicfight.world.item.SpearItem;
 
 public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends HumanoidMobPatch<AbstractEntityCitizen> {
-
+    public boolean shouldRun = false;
     public CitizenEntityPatch() {
         super(Factions.VILLAGER);
     }
@@ -53,14 +61,31 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
     @Override
     public HumanoidArmature getArmature() {
-        return !this.getOriginal().isFemale() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : EpicColoniesArmatures.CITIZEN_LOW_EYES.get();
+        return EpicColoniesArmatures.CITIZEN_REGULAR.get();
     }
 
     @Override
     protected CombatBehaviors.Builder<HumanoidMobPatch<?>> getHoldingItemWeaponMotionBuilder() {
-        if(this.getOriginal().getMainHandItem().getItem() instanceof SwordItem swordItem){
+        CapabilityItem mainHandCap = EpicFightCapabilities.getItemStackCapability(this.getOriginal().getMainHandItem());
+        if (mainHandCap == null) return MobCombatBehaviors.HUMANOID_FIST;
+        WeaponCategory category = mainHandCap.getWeaponCategory();
+        if (category == CapabilityItem.WeaponCategories.SWORD) {
             return MobCombatBehaviors.SKELETON_SWORD;
         }
+        if (this.getOriginal().getMainHandItem().getItem() instanceof SpearItem || category == CapabilityItem.WeaponCategories.SPEAR) {
+            if (this.getOriginal().getOffhandItem().isEmpty())
+                return MobCombatBehaviors.HUMANOID_SPEAR_TWOHAND;
+            return MobCombatBehaviors.HUMANOID_SPEAR_ONEHAND;
+        }
+        if (this.getOriginal().getMainHandItem().getItem() instanceof DaggerItem || category == CapabilityItem.WeaponCategories.DAGGER) {
+            if (this.getOriginal().getOffhandItem().getItem() instanceof DaggerItem || category == CapabilityItem.WeaponCategories.DAGGER)
+                return MobCombatBehaviors.HUMANOID_TWOHAND_DAGGER;
+            return MobCombatBehaviors.HUMANOID_ONEHAND_DAGGER;
+        }
+        if (this.getOriginal().getMainHandItem().getItem() instanceof GreatswordItem || category == CapabilityItem.WeaponCategories.GREATSWORD) {
+            return MobCombatBehaviors.HUMANOID_GREATSWORD;
+        }
+
         return super.getHoldingItemWeaponMotionBuilder();
     }
 
@@ -89,6 +114,34 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         super.commonMobUpdateMotion(b);
     }
 
+    public boolean shouldRun() {
+
+        return this.getTarget() != null || this.getOriginal().getEntityStateController().getState() == EntityAICitizenAvoidEntity.FleeStates.RUNNING;
+    }
+
+    public boolean shouldJogWithAnim() {
+        return (getCurrentForwardSpeed() > 0.08);
+    }
+
+    public double getCurrentForwardSpeed() {
+        Vec3 movement = this.getOriginal().getDeltaMovement();
+        Vec3 forward = this.getOriginal().getForward();
+        return movement.dot(forward);
+    }
+
+    public float getAnimForwardSpeed(float minSpeed, float maxSpeed) {
+
+        double forwardSpeed = getCurrentForwardSpeed();
+
+        // Get the horse's actual max walk speed attribute
+        double maxWalkSpeed = this.getOriginal().getAttributeValue(Attributes.MOVEMENT_SPEED);
+
+        // Normalize: 0.0 when still, 1.0 at full walk speed
+        double normalized = Math.min(forwardSpeed / maxWalkSpeed, 1.0);
+
+        // Scale between your known good minimum and maximum playback speed
+        return (float)(minSpeed + normalized * (maxSpeed - minSpeed));
+    }
     @Override
     protected void clientTick(LivingEvent.LivingTickEvent event) {
         super.clientTick(event);
@@ -109,7 +162,9 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     public void initAnimator(Animator animator) {
         // All available living motions are listed in this enum: https://github.com/Epic-Fight/epicfight/blob/1.21.1/src/main/java/yesman/epicfight/api/animation/LivingMotions.java#L4-L6
         animator.addLivingAnimation(LivingMotions.IDLE, Animations.BIPED_IDLE);
-        animator.addLivingAnimation(LivingMotions.WALK, Animations.BIPED_WALK);
+        animator.addLivingAnimation(LivingMotions.WALK, EpicColoniesAnimations.CITIZEN_WALK);
+        animator.addLivingAnimation(EpicColoniesLivingMotions.JOG, EpicColoniesAnimations.CITIZEN_JOG);
+        animator.addLivingAnimation(LivingMotions.CHASE, Animations.BIPED_RUN);
         animator.addLivingAnimation(LivingMotions.RUN, Animations.BIPED_RUN);
         animator.addLivingAnimation(LivingMotions.FALL, Animations.BIPED_FALL);
         animator.addLivingAnimation(LivingMotions.SIT, Animations.BIPED_SIT);

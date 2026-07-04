@@ -6,6 +6,7 @@
   "refmap": "epic_colonies.refmap.json",
   "mixins": [
     "MixinAttackMoveAiRaider",
+    "MobPatchMixin",
     "AccessorTargetAi"
   ],
   "client": [

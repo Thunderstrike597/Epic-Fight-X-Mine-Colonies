@@ -8,6 +8,7 @@ import net.kenji.epic_colonies.gameasset.patch.MinecoloniesMonsterPatch;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import yesman.epicfight.client.renderer.patched.entity.PatchedLivingEntityRenderer;
 import yesman.epicfight.gameasset.Armatures;
 import yesman.epicfight.world.capabilities.entitypatch.EntityPatch;
@@ -19,13 +20,13 @@ import java.util.function.Supplier;
 
 public class MobPatchFactory {
     public static class MobPatchDefinitions {
-        public final EntityType<?> entityType;
+        public final EntityType<? extends LivingEntity> entityType;
         public final Armatures.ArmatureAccessor<?> armature;
         public final RendererFactory rendererFactory;
         public final Function<Entity, Supplier<EntityPatch<?>>> mobPatch;
 
         public MobPatchDefinitions(
-                EntityType<?> entityType,
+                EntityType<? extends LivingEntity> entityType,
                 Armatures.ArmatureAccessor<?> accessor,
                 Function<Entity, Supplier<EntityPatch<?>>> patch,
                 RendererFactory rendererFactory

@@ -6,6 +6,8 @@ import net.kenji.epic_colonies.api.MobPatchFactory;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -43,8 +45,9 @@ public class ModEvents {
     @SubscribeEvent
     public static void existingEntityAttributes(EntityAttributeModificationEvent event){
 
-        event.add(ModEntities.CITIZEN, Attributes.ATTACK_KNOCKBACK, 1);
-        event.add(ModEntities.NORSEMEN_CHIEF, Attributes.ATTACK_KNOCKBACK, 1);
+        for(MobPatchFactory.MobPatchDefinitions patchDefinitions : MobPatchFactory.mobPatches) {
+            event.add(patchDefinitions.entityType, Attributes.ATTACK_KNOCKBACK, 1);
+        }
 
     }
 
