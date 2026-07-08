@@ -4,6 +4,7 @@ import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
+import com.minecolonies.core.colony.jobs.JobBuilder;
 import com.minecolonies.core.entity.ai.minimal.EntityAICitizenAvoidEntity;
 import com.minecolonies.core.entity.ai.minimal.EntityAIEatTask;
 import com.minecolonies.core.entity.ai.minimal.EntityAIFloat;
@@ -20,6 +21,7 @@ import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Pose;
@@ -33,6 +35,7 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import org.jline.utils.Log;
 import yesman.epicfight.api.animation.*;
 import yesman.epicfight.api.animation.types.DynamicAnimation;
+import yesman.epicfight.api.animation.types.SelectiveAnimation;
 import yesman.epicfight.api.animation.types.StaticAnimation;
 import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.animation.Layer;
@@ -122,11 +125,6 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
         animator.playAnimation(eyebrowAnim, 0F);
         animator.playAnimation(eyeMoveAnim, 0F);
-        if(isLogicalClient()) {
-            if (getClientAnimator().getCompositeLayer(Layer.Priority.HIGHEST).animationPlayer.getAnimation() != null && getClientAnimator().getCompositeLayer(Layer.Priority.HIGHEST).animationPlayer.getAnimation().get() == Animations.BIPED_CLIMBING.get()) {
-                getClientAnimator().stopPlaying(getClientAnimator().getCompositeLayer(Layer.Priority.HIGHEST).animationPlayer.getAnimation().get().getRealAnimation().get().getAccessor());
-            }
-        }
     }
 
     @Override
@@ -243,9 +241,11 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
             compositeMotion = LivingMotions.EAT;
         }
 
-        else if (state instanceof IAIState iAiState) {
-            if(iAiState == AIWorkerState.MINE_BLOCK)
+
+        if(citizen.getCitizenJobHandler().getColonyJob() != null) {
+            if (citizen.getCitizenJobHandler().getColonyJob().getWorkerAI().getState() == AIWorkerState.MINE_BLOCK) {
                 compositeMotion = LivingMotions.DIGGING;
+            }
         }
 
 
@@ -342,12 +342,26 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     public void playCompositeOptionalAnimation(){
         if (citizenPatchData.currentOptionalCompositeMotion != null) {
             AssetAccessor<? extends StaticAnimation> anim =
-                    this.getClientAnimator().getCompositeLivingMotion(citizenPatchData.currentOptionalCompositeMotion);
+                    this.getClientAnimator().getLivingAnimation(citizenPatchData.currentOptionalCompositeMotion, null);
+            if(anim == null){
+                anim = this.getClientAnimator().getCompositeLivingMotion(citizenPatchData.currentOptionalCompositeMotion);
+                Log.info("Living Anim Null, Reassigning! | Anim: " + anim);
+            }
 
             if (anim != null) {
-                AnimationPlayer animPlayer = this.getClientAnimator().getCompositeLayer(anim.get().getPriority()).animationPlayer;
-                if (compositeAnimPlayCounter <= 0 && (animPlayer.getAnimation() == null || animPlayer.getAnimation().get() != anim.get())) {
-                    getAnimator().playAnimation(anim, 0.15F);
+                Layer compositeLayer = this.getClientAnimator().getCompositeLayer(anim.get().getPriority());
+                AnimationPlayer animPlayer = compositeLayer.animationPlayer;
+                StaticAnimation playingAnim = animPlayer.getAnimation().get().getRealAnimation().get();
+                StaticAnimation checkingAnim = anim.get().getRealAnimation().get();
+
+
+                if(animPlayer.getAnimation() == null || playingAnim != checkingAnim) {
+                    getAnimator().playAnimation(anim, 0.18F);
+                    if(animPlayer.getAnimation() != null) {
+                        Log.info("Playing Anim From Player: " + playingAnim);
+
+                        Log.info("Playing Anim: " + checkingAnim);
+                    }
                     compositeAnimPlayCounter = MAX_COMPOSITE_PLAY_COUNTER;
                 }
             }
@@ -400,14 +414,9 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         onCitizenTick();
 
         playCompositeOnLayer(eyebrowAnim, Layer.Priority.HIGHEST);
-        playCompositeOnLayer(eyeMoveAnim, Layer.Priority.MIDDLE);
+        playCompositeOnLayer(eyeMoveAnim, Layer.Priority.LOWEST);
 
         playCompositeOptionalAnimation();
-        if(this.getOriginal().getCivilianID() == 4) {
-           // Log.info("Current Motion: " + citizenPatchData.currentOptionalMotion);
-           // Log.info("Prev Motion: " + citizenPatchData.prevOptionalMotion);
-
-        }
         tryStopAnim(citizenPatchData.prevOptionalMotion);
     }
 
@@ -443,7 +452,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
         animator.addLivingAnimation(LivingMotions.EAT, EpicColoniesAnimations.CITIZEN_EAT);
         animator.addLivingAnimation(LivingMotions.CLIMB, EpicColoniesAnimations.CITIZEN_CLIMB);
-        animator.addLivingAnimation(LivingMotions.DIGGING, Animations.BIPED_DIG);
+        animator.addLivingAnimation(LivingMotions.DIGGING, EpicColoniesAnimations.CITIZEN_DIG);
 
         animator.addLivingAnimation(LivingMotions.IDLE, Animations.BIPED_IDLE);
         animator.addLivingAnimation(LivingMotions.WALK, EpicColoniesAnimations.CITIZEN_WALK);
