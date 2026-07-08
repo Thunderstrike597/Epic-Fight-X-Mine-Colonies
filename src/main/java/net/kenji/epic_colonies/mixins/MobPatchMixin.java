@@ -45,11 +45,11 @@ public class MobPatchMixin { @Inject(method = "commonMobUpdateMotion", at = @At(
                     patch.currentLivingMotion = LivingMotions.IDLE;
                 }
             }
-            if(patch.getCitizenPatchData().currentOptionalCompositeMotion != null && patch.getCitizenPatchData().currentOptionalCompositeMotion != EpicColoniesLivingMotions.EMPTY){
+            if (patch.getCitizenPatchData().currentOptionalCompositeMotion != null
+                    && patch.getCitizenPatchData().currentOptionalCompositeMotion != EpicColoniesLivingMotions.EMPTY) {
                 patch.currentCompositeMotion = patch.getCitizenPatchData().currentOptionalCompositeMotion;
-            }
-            else {
-                patch.currentCompositeMotion = patch.currentLivingMotion;
+            } else {
+                patch.currentCompositeMotion = LivingMotions.NONE; // always a safe, harmless composite key
             }
 
         }

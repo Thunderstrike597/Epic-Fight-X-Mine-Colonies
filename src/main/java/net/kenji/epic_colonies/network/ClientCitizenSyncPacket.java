@@ -39,6 +39,8 @@ public record ClientCitizenSyncPacket(int entityId, UUID uuid, CitizenEntityPatc
         buf.writeInt(fillNullMotion(packet.data.currentOptionalMotion));
         buf.writeInt(fillNullMotion(packet.data.currentOptionalCompositeMotion));
         buf.writeInt(fillNullMotion(packet.data.prevOptionalCompositeMotion));
+        buf.writeInt(fillNullMotion(packet.data.prevOptionalMotion));
+
         buf.writeBoolean(packet.data.isAsleep);
     }
 
@@ -48,11 +50,15 @@ public record ClientCitizenSyncPacket(int entityId, UUID uuid, CitizenEntityPatc
         int motionId = buf.readInt();
         int compositeMotionId = buf.readInt();
         int prevCompositeMotionId = buf.readInt();
+        int prevMotionId = buf.readInt();
         boolean isAsleep = buf.readBoolean();
         LivingMotion motion = getNullableMotion(motionId);
         LivingMotion compositeMotion = getNullableMotion(compositeMotionId);
         LivingMotion prevCompositeMotion = getNullableMotion(prevCompositeMotionId);
-        CitizenEntityPatch.CitizenPatchData data = new CitizenEntityPatch.CitizenPatchData(entityUuid, motion, compositeMotion, prevCompositeMotion, isAsleep);
+        LivingMotion prevMotion = getNullableMotion(prevMotionId);
+
+        CitizenEntityPatch.CitizenPatchData data = new CitizenEntityPatch.CitizenPatchData(entityUuid, motion, compositeMotion, prevCompositeMotion, prevMotion,isAsleep);
+
         return new ClientCitizenSyncPacket(entityId, entityUuid, data);
     }
 
