@@ -212,7 +212,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
                 didJump = true;
             }
         }
-        else if (citizen.getVehicle() instanceof SittingEntity || (citizen.getCitizenSleepHandler().isAsleep() && !citizen.getFeetBlockState().isAir() && citizen.getPose() != Pose.SLEEPING)) {
+        else if (citizen.getVehicle() instanceof SittingEntity || (citizen.getCitizenSleepHandler().isAsleep() && citizen.getFeetBlockState().isSolidRender(citizen.level(), citizen.blockPosition()) && citizen.getPose() != Pose.SLEEPING)) {
             motion = LivingMotions.SIT;
 
         }
@@ -248,7 +248,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
             }
         }
 
-
+        citizenPatchData.isAsleep = citizen.getCitizenSleepHandler().isAsleep();
 
         citizenPatchData.currentOptionalMotion = motion;
         citizenPatchData.currentOptionalCompositeMotion = compositeMotion;
