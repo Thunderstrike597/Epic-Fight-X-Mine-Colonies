@@ -15,4 +15,6 @@ public class EpicColoniesMesh extends HumanoidMesh {
         super(arrayMap, partBuilders, parent, properties);
         this.main = this.getOrLogException(this.parts, "noGroups");
     }
+
+
 }

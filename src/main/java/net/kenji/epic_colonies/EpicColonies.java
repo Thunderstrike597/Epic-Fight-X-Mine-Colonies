@@ -8,6 +8,7 @@ import net.kenji.epic_colonies.client.events.EpicFightClientEvents;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
 import net.kenji.epic_colonies.events.ModEvents;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
+import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.food.FoodProperties;
@@ -56,13 +57,16 @@ public class EpicColonies {
         modEventBus.addListener(EpicColoniesAnimations::registerAnimations);
 
         modEventBus.addListener(ModEvents::commonSetup);
-
+        modEventBus.addListener(this::commonSetup);
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modEventBus.addListener(EpicFightClientEvents::registerPatchedEntityRenderers);        }
     }
 
+    public void commonSetup(FMLCommonSetupEvent event) {
+        event.enqueueWork(EpicColoniesPacketHandler::register);
+    }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
     @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)

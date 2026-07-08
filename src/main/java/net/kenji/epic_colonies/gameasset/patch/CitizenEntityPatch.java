@@ -1,23 +1,33 @@
 package net.kenji.epic_colonies.gameasset.patch;
 
-import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.core.entity.ai.minimal.EntityAICitizenAvoidEntity;
+import com.minecolonies.core.entity.ai.minimal.EntityAIEatTask;
+import com.minecolonies.core.entity.ai.minimal.EntityAIFloat;
+import com.minecolonies.core.entity.citizen.EntityCitizen;
+import com.minecolonies.core.entity.other.SittingEntity;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
 import net.kenji.epic_colonies.gameasset.armatures.CitizenArmature;
+import net.kenji.epic_colonies.mixins.LivingEntityAccessor;
+import net.kenji.epic_colonies.network.ClientCitizenSyncPacket;
+import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingEvent;
-import yesman.epicfight.api.animation.AnimationPlayer;
-import yesman.epicfight.api.animation.Animator;
-import yesman.epicfight.api.animation.Joint;
-import yesman.epicfight.api.animation.LivingMotions;
+import org.jline.utils.Log;
+import yesman.epicfight.api.animation.*;
+import yesman.epicfight.api.animation.types.DynamicAnimation;
+import yesman.epicfight.api.animation.types.StaticAnimation;
+import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.animation.Layer;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.gameasset.MobCombatBehaviors;
@@ -28,15 +38,30 @@ import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
 import yesman.epicfight.world.capabilities.item.WeaponCategory;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
-import yesman.epicfight.world.item.DaggerItem;
-import yesman.epicfight.world.item.GreatswordItem;
-import yesman.epicfight.world.item.SpearItem;
+import yesman.epicfight.world.item.*;
+
+import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends HumanoidMobPatch<AbstractEntityCitizen> {
     public boolean shouldRun = false;
+    public static Map<UUID, CitizenPatchData> citizenPatchDataMap = new HashMap<>();
+    protected CitizenPatchData citizenPatchData = new CitizenPatchData();
+
+    public static int MAX_COMPOSITE_PLAY_COUNTER = 20;
+    public int compositeAnimPlayCounter = MAX_COMPOSITE_PLAY_COUNTER;
+    public static AnimationManager.AnimationAccessor<? extends StaticAnimation> DEFAULT_BROW_ANIM = null;
+    public static AnimationManager.AnimationAccessor<? extends StaticAnimation> DEFAULT_EYES_ANIM = null;
+
+    public AnimationManager.AnimationAccessor<? extends StaticAnimation> eyebrowAnim;
+    public AnimationManager.AnimationAccessor<? extends StaticAnimation> eyeMoveAnim;
+
     public CitizenEntityPatch() {
         super(Factions.VILLAGER);
     }
+    public boolean didJump = false;
 
     public static int MAX_BLINK_COUNTER = 20 * 20;
     public int blinkCounter = 0;
@@ -45,13 +70,51 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         return true;
     }
 
+    public static class CitizenPatchData{
+        public LivingMotion currentOptionalMotion = EpicColoniesLivingMotions.EMPTY;
+        public LivingMotion currentOptionalCompositeMotion = EpicColoniesLivingMotions.EMPTY;
+        public LivingMotion prevOptionalCompositeMotion = null;
+        public boolean isAsleep = false;
+        public CitizenPatchData(UUID uuid, @Nullable LivingMotion optionalMotion,
+                                @Nullable LivingMotion optionalCompositeMotion,
+                                @Nullable LivingMotion prevOptionalCompositeMotion,
+                                boolean isAsleep){
+
+            CitizenPatchData prevData = citizenPatchDataMap.get(uuid); 
+
+            this.currentOptionalMotion = optionalMotion;
+
+            this.currentOptionalCompositeMotion = optionalCompositeMotion;
+
+
+            this.prevOptionalCompositeMotion = prevOptionalCompositeMotion;
+            this.isAsleep = isAsleep;
+            CitizenEntityPatch.citizenPatchDataMap.put(uuid, this);
+
+        }
+        public CitizenPatchData(){
+
+        }
+    }
+
     @Override
     public void onAddedToWorld() {
         super.onAddedToWorld();
-        animator.playAnimation(EpicColoniesAnimations.CITIZEN_BLINK, 0F);
-        animator.playAnimation(EpicColoniesAnimations.CITIZEN_EYES_MOVE, 0F);
+        DEFAULT_BROW_ANIM = EpicColoniesAnimations.CITIZEN_BLINK;
+        DEFAULT_EYES_ANIM = EpicColoniesAnimations.CITIZEN_EYES_MOVE;
 
+        eyebrowAnim = EpicColoniesAnimations.CITIZEN_BLINK;
+        eyeMoveAnim = EpicColoniesAnimations.CITIZEN_EYES_MOVE;
+
+        animator.playAnimation(eyebrowAnim, 0F);
+        animator.playAnimation(eyeMoveAnim, 0F);
+        if(isLogicalClient()) {
+            if (getClientAnimator().getCompositeLayer(Layer.Priority.HIGHEST).animationPlayer.getAnimation() != null && getClientAnimator().getCompositeLayer(Layer.Priority.HIGHEST).animationPlayer.getAnimation().get() == Animations.BIPED_CLIMBING.get()) {
+                getClientAnimator().stopPlaying(getClientAnimator().getCompositeLayer(Layer.Priority.HIGHEST).animationPlayer.getAnimation().get().getRealAnimation().get().getAccessor());
+            }
+        }
     }
+
     @Override
     public Joint getParentJointOfHand(InteractionHand hand) {
         if(this.getArmature() instanceof CitizenArmature citizenArmature){
@@ -62,6 +125,124 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     @Override
     public HumanoidArmature getArmature() {
         return EpicColoniesArmatures.CITIZEN_REGULAR.get();
+    }
+    public void tickEyesAnim(){
+        if(this.getOriginal().isSleeping() || this.original.getCitizenSleepHandler().isAsleep())
+            this.eyebrowAnim = EpicColoniesAnimations.CITIZEN_EYES_CLOSED;
+        else this.eyebrowAnim = DEFAULT_BROW_ANIM;
+    }
+
+    private void onCitizenTick(){
+        if(!this.isLogicalClient())
+            tickCurrentOptionalMotion();
+
+        tickEyesAnim();
+        setSleepDir();
+        if(citizenPatchData.currentOptionalCompositeMotion != null){
+            citizenPatchData.prevOptionalCompositeMotion = citizenPatchData.currentOptionalCompositeMotion;
+        }
+    }
+
+    public CitizenPatchData getCitizenPatchData(){
+        return this.citizenPatchData;
+    }
+
+    public void setCitizenPatchData(CitizenPatchData citizenPatchData) {
+        this.citizenPatchData = citizenPatchData;
+    }
+
+    @Override
+    public void tick(LivingEvent.LivingTickEvent event) {
+        super.tick(event);
+        onCitizenTick();
+    }
+
+    protected void setSleepDir(){
+        Direction bedDir = this.getOriginal().getBedOrientation();
+        if (citizenPatchData.currentOptionalMotion == LivingMotions.SLEEP && bedDir != null) {
+            float bedRot = Mth.wrapDegrees(bedDir.toYRot() + 180.0F);
+            AbstractEntityCitizen c = this.getOriginal();
+            c.setYRot(bedRot);
+            c.yBodyRot = bedRot;
+            c.yBodyRotO = bedRot;
+            c.yHeadRot = bedRot;
+            c.yHeadRotO = bedRot;
+        }
+    }
+
+    public void tickCurrentOptionalMotion() {
+        AbstractEntityCitizen citizen = this.getOriginal();
+        if(!(citizen instanceof EntityCitizen entityCitizen)) return;
+        IState state = entityCitizen.getCitizenAI().getState();
+        boolean wasSet = false;
+        if (((LivingEntityAccessor)citizen).isJumping()) {
+            if(!didJump) {
+                citizenPatchData.currentOptionalMotion = LivingMotions.JUMP;
+                didJump = true;
+                wasSet = true;
+            }
+        }
+        else if (citizen.getVehicle() instanceof SittingEntity || (citizen.getCitizenSleepHandler().isAsleep() && !citizen.getFeetBlockState().isAir() && citizen.getPose() != Pose.SLEEPING)) {
+            citizenPatchData.currentOptionalMotion = LivingMotions.SIT;
+            wasSet = true;
+        }
+        else if (citizen.getPose() == Pose.SLEEPING) {
+            citizenPatchData.currentOptionalMotion = LivingMotions.SLEEP;
+            wasSet = true;
+        }
+        if(!wasSet)
+            citizenPatchData.currentOptionalMotion = null;
+
+        wasSet = false;
+
+        if (citizen.getPose() == Pose.CROUCHING) {
+            citizenPatchData.currentOptionalCompositeMotion = LivingMotions.SNEAK;
+            wasSet = true;
+        }
+
+        if (state == EntityAIEatTask.EatingState.EAT) {
+            citizenPatchData.currentOptionalCompositeMotion = LivingMotions.EAT;
+            wasSet = true;
+        }
+        if(!wasSet)
+            citizenPatchData.currentOptionalCompositeMotion = null;
+
+
+        EpicColoniesPacketHandler.sendToAll(new ClientCitizenSyncPacket(citizen.getId(), this.getOriginal().getUUID(), citizenPatchData));
+        if(didJump && citizen.onGround()){
+            didJump = false;
+        }
+    }
+    @Override
+    public void updateMotion(boolean considerInaction) {
+        super.commonMobUpdateMotion(considerInaction);
+
+        if (this.original.isUsingItem() && citizenPatchData.currentOptionalCompositeMotion == null) {
+            CapabilityItem activeItem = this.getHoldingItemCapability(this.original.getUsedItemHand());
+            UseAnim useAnim = this.original.getItemInHand(this.original.getUsedItemHand()).getUseAnimation();
+            UseAnim secondUseAnim = activeItem.getUseAnimation(this);
+
+            if (useAnim == UseAnim.BLOCK || secondUseAnim == UseAnim.BLOCK)
+                if (activeItem.getWeaponCategory() == CapabilityItem.WeaponCategories.SHIELD)
+                    currentCompositeMotion = LivingMotions.BLOCK_SHIELD;
+                else
+                    currentCompositeMotion = LivingMotions.BLOCK;
+            else if (useAnim == UseAnim.BOW || useAnim == UseAnim.SPEAR)
+                currentCompositeMotion = LivingMotions.AIM;
+            else if (useAnim == UseAnim.CROSSBOW)
+                currentCompositeMotion = LivingMotions.RELOAD;
+            else
+                currentCompositeMotion = currentLivingMotion;
+        } else if(citizenPatchData.currentOptionalCompositeMotion == null) {
+            if (CrossbowItem.isCharged(this.original.getMainHandItem()))
+                currentCompositeMotion = LivingMotions.AIM;
+            else if (this.getClientAnimator().getCompositeLayer(Layer.Priority.MIDDLE).animationPlayer.getAnimation().get().isReboundAnimation())
+                currentCompositeMotion = LivingMotions.NONE;
+            else if (this.original.swinging && this.original.getSleepingPos().isEmpty())
+                currentCompositeMotion = LivingMotions.DIGGING;
+            else
+                currentCompositeMotion = currentLivingMotion;
+        }
     }
 
     @Override
@@ -82,6 +263,12 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
                 return MobCombatBehaviors.HUMANOID_TWOHAND_DAGGER;
             return MobCombatBehaviors.HUMANOID_ONEHAND_DAGGER;
         }
+        if (this.getOriginal().getMainHandItem().getItem() instanceof LongswordItem || category == CapabilityItem.WeaponCategories.LONGSWORD) {
+                return MobCombatBehaviors.HUMANOID_LONGSWORD;
+        }
+        if (this.getOriginal().getMainHandItem().getItem() instanceof TachiItem || category == CapabilityItem.WeaponCategories.TACHI) {
+            return MobCombatBehaviors.HUMANOID_TACHI;
+        }
         if (this.getOriginal().getMainHandItem().getItem() instanceof GreatswordItem || category == CapabilityItem.WeaponCategories.GREATSWORD) {
             return MobCombatBehaviors.HUMANOID_GREATSWORD;
         }
@@ -89,29 +276,45 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         return super.getHoldingItemWeaponMotionBuilder();
     }
 
-    @Override
-    public void updateMotion(boolean b) {
-        AbstractEntityCitizen citizen = this.getOriginal();
-        IState state = citizen.getEntityStateController().getState();
-        if(citizen.getPose() == Pose.SITTING){
-            this.currentLivingMotion = LivingMotions.SIT;
-            this.currentCompositeMotion = LivingMotions.SIT;
-            return;
-        }
-        if(state == CitizenAIState.EATING){
-            this.currentLivingMotion = LivingMotions.EAT;
-            this.currentCompositeMotion = LivingMotions.EAT;
-            return;
-        }
-        if(state == CitizenAIState.SLEEP){
-            this.currentLivingMotion = LivingMotions.SLEEP;
-            this.currentCompositeMotion = LivingMotions.SLEEP;
-            return;
-        }
+    public void playCompositeOnLayer(AnimationManager.AnimationAccessor<? extends StaticAnimation> anim, Layer.Priority layerPriority){
+        AnimationPlayer animPlayer = this.getClientAnimator().getCompositeLayer(layerPriority).animationPlayer;
 
+        if(animPlayer.getAnimation() == null || animPlayer.getAnimation().get() != anim.get()){
+            animator.playAnimationInstantly(anim);
+        }
+    }
+    public void stopCompositeOnLayer(AnimationManager.AnimationAccessor<? extends StaticAnimation> anim, Layer.Priority layerPriority){
+        AnimationPlayer animPlayer = this.getClientAnimator().getCompositeLayer(layerPriority).animationPlayer;
 
+        if(animPlayer.getAnimation() != null || animPlayer.getAnimation().get() == anim.get()){
+            animator.stopPlaying(anim);
+        }
+    }
+    public void playCompositeOptionalAnimation(){
+        if (citizenPatchData.currentOptionalCompositeMotion != null) {
+            AssetAccessor<? extends StaticAnimation> anim =
+                    this.getClientAnimator().getCompositeLivingMotion(citizenPatchData.currentOptionalCompositeMotion);
 
-        super.commonMobUpdateMotion(b);
+            if (anim != null) {
+                AnimationPlayer animPlayer = this.getClientAnimator().getCompositeLayer(anim.get().getPriority()).animationPlayer;
+                if (compositeAnimPlayCounter <= 0 && (animPlayer.getAnimation() == null || animPlayer.getAnimation().get() != anim.get())) {
+                    getAnimator().playAnimation(anim, 0.1F);
+                    compositeAnimPlayCounter = MAX_COMPOSITE_PLAY_COUNTER;
+                }
+            }
+        } else {
+            AssetAccessor<? extends StaticAnimation> anim =
+                    this.getClientAnimator().getCompositeLivingMotion(citizenPatchData.prevOptionalCompositeMotion);
+            if (anim != null) {
+                AnimationPlayer animPlayer = this.getClientAnimator().getCompositeLayer(anim.get().getPriority()).animationPlayer;
+                if (animPlayer.getAnimation() != null && animPlayer.getAnimation().get() == anim.get()) {
+                    getAnimator().stopPlaying(anim);
+                }
+            }
+        }
+        if(compositeAnimPlayCounter > 0){
+            compositeAnimPlayCounter--;
+        }
     }
 
     public boolean shouldRun() {
@@ -145,15 +348,30 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     @Override
     protected void clientTick(LivingEvent.LivingTickEvent event) {
         super.clientTick(event);
-        AnimationPlayer highestAnimPlayer = this.getClientAnimator().getCompositeLayer(Layer.Priority.HIGHEST).animationPlayer;
-        AnimationPlayer middleAnimPlayer = this.getClientAnimator().getCompositeLayer(Layer.Priority.MIDDLE).animationPlayer;
+        onCitizenTick();
 
-        if(highestAnimPlayer != null){
-            if(highestAnimPlayer.getAnimation() == null || highestAnimPlayer.getAnimation().get() != EpicColoniesAnimations.CITIZEN_BLINK.get()){
-                animator.playAnimationInstantly(EpicColoniesAnimations.CITIZEN_BLINK);
-            }
-            if(middleAnimPlayer.getAnimation() == null || middleAnimPlayer.getAnimation().get() != EpicColoniesAnimations.CITIZEN_EYES_MOVE.get()){
-                animator.playAnimationInstantly(EpicColoniesAnimations.CITIZEN_EYES_MOVE);
+        playCompositeOnLayer(eyebrowAnim, Layer.Priority.HIGHEST);
+        playCompositeOnLayer(eyeMoveAnim, Layer.Priority.MIDDLE);
+        tryStopAnim(LivingMotions.CLIMB);
+
+        playCompositeOptionalAnimation();
+    }
+
+    private void tryStopAnim(LivingMotion motion) {
+
+        AssetAccessor<? extends StaticAnimation> anim = animator.getLivingAnimation(motion, null);
+
+        if (anim == null) {
+            anim = this.getClientAnimator().getCompositeLivingMotion(motion);
+        }
+
+        if (anim != null) {
+            AnimationPlayer highestAnimPlayer = getClientAnimator().getCompositeLayer(anim.get().getPriority()).animationPlayer;
+            AssetAccessor<? extends DynamicAnimation> highestAnim = highestAnimPlayer.getAnimation();
+
+            if (highestAnim != null && highestAnim.get() == anim.get()) {
+                if (citizenPatchData.currentOptionalMotion != motion)
+                    stopCompositeOnLayer(anim.get().getAccessor(), anim.get().getPriority());
             }
         }
     }
@@ -161,6 +379,10 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     @Override
     public void initAnimator(Animator animator) {
         // All available living motions are listed in this enum: https://github.com/Epic-Fight/epicfight/blob/1.21.1/src/main/java/yesman/epicfight/api/animation/LivingMotions.java#L4-L6
+
+        animator.addLivingAnimation(LivingMotions.EAT, EpicColoniesAnimations.CITIZEN_EAT);
+        animator.addLivingAnimation(LivingMotions.CLIMB, Animations.BIPED_CLIMBING);
+
         animator.addLivingAnimation(LivingMotions.IDLE, Animations.BIPED_IDLE);
         animator.addLivingAnimation(LivingMotions.WALK, EpicColoniesAnimations.CITIZEN_WALK);
         animator.addLivingAnimation(EpicColoniesLivingMotions.JOG, EpicColoniesAnimations.CITIZEN_JOG);
@@ -174,6 +396,6 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         animator.addLivingAnimation(LivingMotions.AIM, Animations.BIPED_BOW_AIM);
         animator.addLivingAnimation(LivingMotions.SHOT, Animations.BIPED_BOW_SHOT);
         animator.addLivingAnimation(LivingMotions.DRINK, Animations.BIPED_DRINK);
-        animator.addLivingAnimation(LivingMotions.EAT, Animations.BIPED_EAT);
     }
+
 }

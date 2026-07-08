@@ -15,9 +15,13 @@ import yesman.epicfight.api.client.animation.Layer;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.gameasset.MobCombatBehaviors;
 import yesman.epicfight.model.armature.HumanoidArmature;
+import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
+import yesman.epicfight.world.capabilities.item.CapabilityItem;
+import yesman.epicfight.world.capabilities.item.WeaponCategory;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
+import yesman.epicfight.world.item.*;
 
 public class MinecoloniesMonsterPatch<E extends AbstractEntityMinecoloniesMonster> extends HumanoidMobPatch<AbstractEntityMinecoloniesMonster> {
 
@@ -53,11 +57,35 @@ public class MinecoloniesMonsterPatch<E extends AbstractEntityMinecoloniesMonste
 
     @Override
     protected CombatBehaviors.Builder<HumanoidMobPatch<?>> getHoldingItemWeaponMotionBuilder() {
-        if(this.getOriginal().getMainHandItem().getItem() instanceof SwordItem swordItem){
+        CapabilityItem mainHandCap = EpicFightCapabilities.getItemStackCapability(this.getOriginal().getMainHandItem());
+        if (mainHandCap == null) return MobCombatBehaviors.HUMANOID_FIST;
+        WeaponCategory category = mainHandCap.getWeaponCategory();
+        if (category == CapabilityItem.WeaponCategories.SWORD) {
             return MobCombatBehaviors.SKELETON_SWORD;
         }
+        if (this.getOriginal().getMainHandItem().getItem() instanceof SpearItem || category == CapabilityItem.WeaponCategories.SPEAR) {
+            if (this.getOriginal().getOffhandItem().isEmpty())
+                return MobCombatBehaviors.HUMANOID_SPEAR_TWOHAND;
+            return MobCombatBehaviors.HUMANOID_SPEAR_ONEHAND;
+        }
+        if (this.getOriginal().getMainHandItem().getItem() instanceof DaggerItem || category == CapabilityItem.WeaponCategories.DAGGER) {
+            if (this.getOriginal().getOffhandItem().getItem() instanceof DaggerItem || category == CapabilityItem.WeaponCategories.DAGGER)
+                return MobCombatBehaviors.HUMANOID_TWOHAND_DAGGER;
+            return MobCombatBehaviors.HUMANOID_ONEHAND_DAGGER;
+        }
+        if (this.getOriginal().getMainHandItem().getItem() instanceof LongswordItem || category == CapabilityItem.WeaponCategories.LONGSWORD) {
+            return MobCombatBehaviors.HUMANOID_LONGSWORD;
+        }
+        if (this.getOriginal().getMainHandItem().getItem() instanceof TachiItem || category == CapabilityItem.WeaponCategories.TACHI) {
+            return MobCombatBehaviors.HUMANOID_TACHI;
+        }
+        if (this.getOriginal().getMainHandItem().getItem() instanceof GreatswordItem || category == CapabilityItem.WeaponCategories.GREATSWORD) {
+            return MobCombatBehaviors.HUMANOID_GREATSWORD;
+        }
+
         return super.getHoldingItemWeaponMotionBuilder();
     }
+
 
     @Override
     public void updateMotion(boolean b) {

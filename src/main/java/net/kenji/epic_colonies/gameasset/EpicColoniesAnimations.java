@@ -13,14 +13,19 @@ public class EpicColoniesAnimations {
         event.newBuilder(EpicColonies.MODID, EpicColoniesAnimations::build);    }
 
     public static AnimationManager.AnimationAccessor<StaticAnimation> CITIZEN_BLINK;
+    public static AnimationManager.AnimationAccessor<StaticAnimation> CITIZEN_EYES_CLOSED;
+
     public static AnimationManager.AnimationAccessor<StaticAnimation> CITIZEN_EYES_MOVE;
 
     public static AnimationManager.AnimationAccessor<StaticAnimation> CITIZEN_WALK;
-
     public static AnimationManager.AnimationAccessor<StaticAnimation> CITIZEN_JOG;
+    public static AnimationManager.AnimationAccessor<StaticAnimation> CITIZEN_EAT;
+
 
     private static void build(AnimationManager.AnimationBuilder builder){
         CITIZEN_BLINK = builder.nextAccessor("citizen/living/citizen_blink", (accessor -> new StaticAnimation(0.2F,true, accessor, EpicColoniesArmatures.CITIZEN_REGULAR)));
+        CITIZEN_EYES_CLOSED = builder.nextAccessor("citizen/living/citizen_eyes_closed", (accessor -> new StaticAnimation(0.2F,true, accessor, EpicColoniesArmatures.CITIZEN_REGULAR)));
+
         CITIZEN_EYES_MOVE = builder.nextAccessor("citizen/living/citizen_eyes_move", (accessor -> new StaticAnimation(0.2F,true, accessor, EpicColoniesArmatures.CITIZEN_REGULAR)));
         CITIZEN_WALK = builder.nextAccessor("citizen/living/citizen_walk", (accessor -> new StaticAnimation(0.2F,true, accessor, Armatures.BIPED).addProperty(AnimationProperty.StaticAnimationProperty.PLAY_SPEED_MODIFIER, (self, entitypatch, speed, prevElapsedTime, elapsedTime) -> {
             if (entitypatch instanceof CitizenEntityPatch<?> patchInterface) {
@@ -34,7 +39,9 @@ public class EpicColoniesAnimations {
             }
             return speed;
         })));
-
+        CITIZEN_EAT = builder.nextAccessor("citizen/living/citizen_eat", (accessor -> new StaticAnimation(0.1F,true, accessor, Armatures.BIPED).addProperty(AnimationProperty.StaticAnimationProperty.PLAY_SPEED_MODIFIER, (self, entitypatch, speed, prevElapsedTime, elapsedTime) -> {
+            return 0.8F;
+        })));
     }
 
 }
