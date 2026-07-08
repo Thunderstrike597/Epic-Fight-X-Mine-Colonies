@@ -248,6 +248,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
             }
         }
 
+
         citizenPatchData.isAsleep = citizen.getCitizenSleepHandler().isAsleep();
 
         citizenPatchData.currentOptionalMotion = motion;
