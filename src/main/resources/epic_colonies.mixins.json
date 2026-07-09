@@ -8,7 +8,10 @@
     "MixinAttackMoveAiRaider",
     "MobPatchMixin",
     "AccessorTargetAi",
-    "LivingEntityAccessor"
+    "LivingEntityAccessor",
+    "AccessorHumanoidArmorLayer",
+    "AccessorLivingEntityRenderer",
+    "AccessorWearableItemLayer"
   ],
   "client": [
   ],

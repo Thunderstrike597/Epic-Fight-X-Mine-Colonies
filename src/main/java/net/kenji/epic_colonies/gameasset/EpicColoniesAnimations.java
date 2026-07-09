@@ -44,7 +44,7 @@ public class EpicColoniesAnimations {
         })));
         CITIZEN_JOG = builder.nextAccessor("citizen/living/citizen_jog", (accessor -> new StaticAnimation(0.2F,true, accessor, Armatures.BIPED).addProperty(AnimationProperty.StaticAnimationProperty.PLAY_SPEED_MODIFIER, (self, entitypatch, speed, prevElapsedTime, elapsedTime) -> {
             if (entitypatch instanceof CitizenEntityPatch<?> patchInterface) {
-                return patchInterface.getAnimForwardSpeed(1F, 2.25F);
+                return patchInterface.getAnimForwardSpeed(1F, 2.45F);
             }
             return speed;
         })));

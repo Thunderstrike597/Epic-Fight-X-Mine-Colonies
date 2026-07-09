@@ -1,9 +1,15 @@
 package net.kenji.epic_colonies.gameasset.patch;
 
+import com.minecolonies.api.colony.ICitizenData;
+import com.minecolonies.api.colony.ICitizenDataView;
+import com.minecolonies.api.colony.jobs.IJob;
+import com.minecolonies.api.colony.jobs.IJobView;
+import com.minecolonies.api.colony.jobs.registry.JobEntry;
 import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
+import com.minecolonies.core.colony.CitizenData;
 import com.minecolonies.core.colony.jobs.JobBuilder;
 import com.minecolonies.core.entity.ai.minimal.EntityAICitizenAvoidEntity;
 import com.minecolonies.core.entity.ai.minimal.EntityAIEatTask;
@@ -11,6 +17,7 @@ import com.minecolonies.core.entity.ai.minimal.EntityAIFloat;
 import com.minecolonies.core.entity.ai.workers.builder.EntityAIStructureBuilder;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.other.SittingEntity;
+import net.kenji.epic_colonies.api.data.CitizenMeshCache;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
@@ -24,9 +31,11 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.state.BlockState;
@@ -125,6 +134,19 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
         animator.playAnimation(eyebrowAnim, 0F);
         animator.playAnimation(eyeMoveAnim, 0F);
+
+
+        boolean isChild = false;
+        AbstractEntityCitizen citizen = this.getOriginal();
+
+        if (citizen.level().isClientSide) {
+            if (citizen.getCitizenDataView() == null) {
+                CitizenMeshCache.Entry cached = CitizenMeshCache.get(citizen.getUUID());
+                if (cached != null) {
+                    this.getOriginal().setIsChild(cached.isChild());
+                }
+            }
+        }
     }
 
     @Override
@@ -136,6 +158,14 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
     @Override
     public HumanoidArmature getArmature() {
+        ICitizenData data  = this.getOriginal().getCitizenData();
+        ICitizenDataView dataView  = this.getOriginal().getCitizenDataView();
+        if(data != null) {
+            return !data.isChild() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : EpicColoniesArmatures.CITIZEN_CHILD.get();
+        }
+        if(dataView != null){
+            return !dataView.isChild() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : EpicColoniesArmatures.CITIZEN_CHILD.get();
+        }
         return EpicColoniesArmatures.CITIZEN_REGULAR.get();
     }
     public void tickEyesAnim(){
@@ -170,6 +200,24 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     public void tick(LivingEvent.LivingTickEvent event) {
         super.tick(event);
         onCitizenTick();
+
+    }
+
+    private void debugSetChild() {
+
+        if (this.getOriginal().getCitizenData() != null) {
+            //if (this.getOriginal().getItemBySlot(EquipmentSlot.FEET).getItem() == Items.LEATHER_BOOTS) {
+                this.getOriginal().setIsChild(true);
+                this.getOriginal().getCitizenData().setIsChild(true);
+            //}
+        }
+
+        if (this.getOriginal().getCitizenDataView() != null) {
+            //if (this.getOriginal().getItemBySlot(EquipmentSlot.FEET).getItem() == Items.LEATHER_BOOTS) {
+                this.getOriginal().setIsChild(true);
+                Log.info("Logging Child Set True For DataView!");
+            //}
+        }
     }
 
     protected void setSleepDir(){
@@ -419,6 +467,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
         playCompositeOptionalAnimation();
         tryStopAnim(citizenPatchData.prevOptionalMotion);
+
     }
 
     private void tryStopAnim(LivingMotion motion) {
