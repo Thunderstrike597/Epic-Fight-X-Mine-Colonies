@@ -29,7 +29,7 @@ public final class CitizenMeshCache {
 
     private CitizenMeshCache() {}
 
-    public record Entry(boolean isChild, @Nullable String jobId) {}
+    public record Entry(boolean isChild, @Nullable String jobId, @Nullable String skinTextureId) {}
 
     /** Call on world/server join, before any citizens render. */
     public static void load() {
@@ -60,10 +60,11 @@ public final class CitizenMeshCache {
         }
     }
 
-    public static void put(UUID citizenId, boolean isChild, @Nullable JobEntry job) {
+    public static void put(UUID citizenId, boolean isChild, @Nullable JobEntry job, @Nullable String textureId) {
         String jobId = job == null ? null : job.getKey().toString();
-        Entry entry = new Entry(isChild, jobId);
+        Entry entry = new Entry(isChild, jobId, textureId);
         Entry old = CACHE.put(citizenId, entry);
+
 
         if (!entry.equals(old)) {
             dirty = true;
@@ -81,5 +82,19 @@ public final class CitizenMeshCache {
         // Swap this for whatever MineColonies actually exposes, e.g.
         // MinecoloniesAPIProxy.getInstance().getJobRegistry().getValue(new ResourceLocation(jobId));
         return IJobRegistry.getInstance().getValue(new ResourceLocation(jobId));
+    }
+    @Nullable
+    public static ResourceLocation resolveTextLocation(@Nullable String jobId) {
+        if (!isValidTexture(jobId)) return null;
+        // Swap this for whatever MineColonies actually exposes, e.g.
+        // MinecoloniesAPIProxy.getInstance().getJobRegistry().getValue(new ResourceLocation(jobId));
+        return new ResourceLocation(jobId);
+    }
+
+    public static boolean isValidTexture(@Nullable String textureStr) {
+        return textureStr != null
+                && textureStr.contains(":")           // rules out bare "0" (no namespace separator)
+                && !textureStr.endsWith(":0")          // rules out "minecraft:0" specifically
+                && !textureStr.equals("minecraft:0");
     }
 }

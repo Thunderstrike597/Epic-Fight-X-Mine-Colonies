@@ -14,6 +14,7 @@
     "AccessorWearableItemLayer"
   ],
   "client": [
+    "RenderBipedCitizenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

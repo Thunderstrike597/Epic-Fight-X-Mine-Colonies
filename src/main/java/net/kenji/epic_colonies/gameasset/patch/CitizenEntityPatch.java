@@ -139,12 +139,17 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         boolean isChild = false;
         AbstractEntityCitizen citizen = this.getOriginal();
 
-        if (citizen.level().isClientSide) {
-            if (citizen.getCitizenDataView() == null) {
+
+        if (citizen.getCitizenDataView() == null) {
                 CitizenMeshCache.Entry cached = CitizenMeshCache.get(citizen.getUUID());
                 if (cached != null) {
                     this.getOriginal().setIsChild(cached.isChild());
                 }
+        }
+        if (citizen.getCitizenData() == null) {
+            CitizenMeshCache.Entry cached = CitizenMeshCache.get(citizen.getUUID());
+            if (cached != null) {
+                this.getOriginal().setIsChild(cached.isChild());
             }
         }
     }
@@ -200,6 +205,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     public void tick(LivingEvent.LivingTickEvent event) {
         super.tick(event);
         onCitizenTick();
+
 
     }
 

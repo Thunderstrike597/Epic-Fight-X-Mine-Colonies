@@ -16,6 +16,7 @@ import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMesh;
 import net.kenji.epic_colonies.client.patched_layers.CitizenWearableItemLayer;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
@@ -33,6 +34,7 @@ import yesman.epicfight.client.renderer.patched.entity.PatchedLivingEntityRender
 import yesman.epicfight.client.renderer.patched.layer.PatchedItemInHandLayer;
 import yesman.epicfight.client.renderer.patched.layer.WearableItemLayer;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 
 public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntityCitizen, CitizenEntityPatch<AbstractEntityCitizen>, CitizenModel<AbstractEntityCitizen>, RenderBipedCitizen, EpicColoniesMesh> {
@@ -46,7 +48,8 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
     public AssetAccessor<EpicColoniesMesh> getMeshProvider(CitizenEntityPatch<AbstractEntityCitizen> entitypatch) {
         try {
             AssetAccessor<EpicColoniesMesh> mesh = getCitizenMesh(entitypatch.getOriginal(), !entitypatch.getOriginal().isFemale());;
-            return mesh;
+
+           return mesh;
         } catch (Throwable t) {
             EpicColonies.LOGGER.error("Mesh resolution failed for citizen {}", entitypatch.getOriginal().getUUID(), t);
             return EpicColoniesMeshes.CITIZEN_MALE; // safe fallback so at least *something* renders
@@ -87,9 +90,20 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
         }
 
         if (dataAvailable) {
-            // real data arrived - update the disk-backed cache for next time
             if (citizen.level().isClientSide) {
-                CitizenMeshCache.put(citizen.getUUID(), isChild, jobEntry);
+                String textureStr = citizen.getTexture().toString();
+
+                // Only cache the texture once it's actually resolved to something
+                // real - MineColonies syncs this field independently/later than
+                // isChild/job, so `view != null` alone doesn't guarantee it's ready.
+                if (CitizenMeshCache.isValidTexture(textureStr)) {
+                    CitizenMeshCache.put(citizen.getUUID(), isChild, jobEntry, textureStr);
+                } else {
+                    // still cache isChild/job now, keep whatever texture we had before
+                    CitizenMeshCache.Entry existing = CitizenMeshCache.get(citizen.getUUID());
+                    String keepTexture = existing != null ? existing.skinTextureId() : null;
+                    CitizenMeshCache.put(citizen.getUUID(), isChild, jobEntry, keepTexture);
+                }
             }
         } else if (citizen.level().isClientSide) {
             // no data yet - fall back to what we saved last session
@@ -111,6 +125,7 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
     @Override
     public void render(AbstractEntityCitizen entity, CitizenEntityPatch<AbstractEntityCitizen> entitypatch, RenderBipedCitizen renderer, MultiBufferSource buffer, PoseStack poseStack, int packedLight, float partialTicks) {
         AssetAccessor<EpicColoniesMesh> mesh = this.getCitizenMesh(entity, !entity.isFemale());
+
         if(mesh.get().hat != null) {
             if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
 
@@ -121,6 +136,7 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
                 mesh.get().hat.setHidden(false);
             }
         }
+
         super.render(entity, entitypatch, renderer, buffer, poseStack, packedLight, partialTicks);
     }
     @Override

@@ -1,14 +1,19 @@
 package net.kenji.epic_colonies.events;
 
 import com.minecolonies.api.entity.ModEntities;
+import com.mojang.brigadier.CommandDispatcher;
 import net.kenji.epic_colonies.EpicColonies;
 import net.kenji.epic_colonies.api.MobPatchFactory;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
+import net.kenji.epic_colonies.commands.SetChildCommand;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -19,7 +24,6 @@ import yesman.epicfight.gameasset.Armatures;
 
 @Mod.EventBusSubscriber(modid = EpicColonies.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModEvents {
-
     public static void registerPatchedEntities(EntityPatchRegistryEvent event) {
         for (MobPatchFactory.MobPatchDefinitions def : MobPatchFactory.mobPatches) {
             event.getTypeEntry().put(def.entityType, def.mobPatch);
