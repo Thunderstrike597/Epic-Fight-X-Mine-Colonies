@@ -165,11 +165,12 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     public HumanoidArmature getArmature() {
         ICitizenData data  = this.getOriginal().getCitizenData();
         ICitizenDataView dataView  = this.getOriginal().getCitizenDataView();
+        HumanoidArmature childArmature = !this.getOriginal().isFemale() ? EpicColoniesArmatures.CHILD_MALE.get() : EpicColoniesArmatures.CHILD_FEMALE.get();
         if(data != null) {
-            return !data.isChild() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : EpicColoniesArmatures.CITIZEN_CHILD.get();
+            return !data.isChild() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : childArmature;
         }
         if(dataView != null){
-            return !dataView.isChild() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : EpicColoniesArmatures.CITIZEN_CHILD.get();
+            return !dataView.isChild() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : childArmature;
         }
         return EpicColoniesArmatures.CITIZEN_REGULAR.get();
     }
