@@ -181,16 +181,17 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
 
     private void onCitizenTick(){
-        if(!this.isLogicalClient())
-            tickCurrentOptionalMotion();
-
         tickEyesAnim();
         setSleepDir();
-        if(citizenPatchData.currentOptionalCompositeMotion != null){
-            citizenPatchData.prevOptionalCompositeMotion = citizenPatchData.currentOptionalCompositeMotion;
-        }
-        if(citizenPatchData.currentOptionalMotion != null){
-            citizenPatchData.prevOptionalMotion = citizenPatchData.currentOptionalMotion;
+
+        if(!this.isLogicalClient()) {
+            tickCurrentOptionalMotion();
+            if (citizenPatchData.currentOptionalCompositeMotion != null) {
+                citizenPatchData.prevOptionalCompositeMotion = citizenPatchData.currentOptionalCompositeMotion;
+            }
+            if (citizenPatchData.currentOptionalMotion != null) {
+                citizenPatchData.prevOptionalMotion = citizenPatchData.currentOptionalMotion;
+            }
         }
     }
 
@@ -203,10 +204,9 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
 
     @Override
-    public void tick(LivingEvent.LivingTickEvent event) {
-        super.tick(event);
-        onCitizenTick();
-
+    public void serverTick(LivingEvent.LivingTickEvent event) {
+        super.serverTick(event); // already dispatches to clientTick()/serverTick() internally, including onCitizenTick() on the client
+        onCitizenTick(); // only need to run it here for the server, since clientTick() already covers the client path
 
     }
 
@@ -467,13 +467,15 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     @Override
     protected void clientTick(LivingEvent.LivingTickEvent event) {
         super.clientTick(event);
+        LivingMotion motionBeforeThisTick = citizenPatchData.prevOptionalMotion;
+
         onCitizenTick();
 
         playCompositeOnLayer(eyebrowAnim, Layer.Priority.HIGHEST);
         playCompositeOnLayer(eyeMoveAnim, Layer.Priority.LOWEST);
 
         playCompositeOptionalAnimation();
-        tryStopAnim(citizenPatchData.prevOptionalMotion);
+        tryStopAnim(LivingMotions.CLIMB);
 
     }
 

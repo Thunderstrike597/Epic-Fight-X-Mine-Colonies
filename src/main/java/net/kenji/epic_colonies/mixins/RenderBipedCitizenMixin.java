@@ -25,7 +25,6 @@ public class RenderBipedCitizenMixin {
             CitizenMeshCache.Entry cached = CitizenMeshCache.get(entity.getUUID());
             if (cached != null) {
                 ResourceLocation location = CitizenMeshCache.resolveTextLocation(cached.skinTextureId());
-                Log.info("location: " + location);
 
                 if(location != null && cached.skinTextureId() != null && !cached.skinTextureId().isEmpty())
                     cir.setReturnValue(location);

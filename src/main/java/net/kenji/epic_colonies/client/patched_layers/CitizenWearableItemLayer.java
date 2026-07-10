@@ -6,54 +6,38 @@ import com.minecolonies.api.colony.jobs.ModJobs;
 import com.minecolonies.api.colony.jobs.registry.JobEntry;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import java.util.*;
-import javax.annotation.Nullable;
 
 import net.kenji.epic_colonies.mixins.AccessorHumanoidArmorLayer;
-import net.kenji.epic_colonies.mixins.AccessorLivingEntityRenderer;
 import net.kenji.epic_colonies.mixins.AccessorWearableItemLayer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.HumanoidArmorModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.EquipmentSlot.Type;
 import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.DyeableLeatherItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.armortrim.ArmorTrim;
 import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.registries.ForgeRegistries;
 import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.asset.JsonAssetLoader;
-import yesman.epicfight.api.client.forgeevent.AnimatedArmorTextureEvent;
 import yesman.epicfight.api.client.model.SkinnedMesh;
-import yesman.epicfight.api.client.model.Mesh.DrawingFunction;
 import yesman.epicfight.api.client.model.transformer.HumanoidModelBaker;
 import yesman.epicfight.api.exception.AssetLoadingException;
-import yesman.epicfight.api.model.Armature;
 import yesman.epicfight.api.utils.math.OpenMatrix4f;
 import yesman.epicfight.client.ClientEngine;
 import yesman.epicfight.client.mesh.HumanoidMesh;
-import yesman.epicfight.client.renderer.EpicFightRenderTypes;
-import yesman.epicfight.client.renderer.patched.layer.ModelRenderLayer;
 import yesman.epicfight.client.renderer.patched.layer.WearableItemLayer;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 
@@ -65,7 +49,8 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
     private final boolean firstPersonModel;
     private final TextureAtlas armorTrimAtlas;
 
-    List<JobEntry> validRenderEntries = new ArrayList<>();
+    private static final List<JobEntry> validRenderEntries = new ArrayList<>();
+    private static final Map<UUID, Boolean> shouldRenderArmorMap = new HashMap<>();
     public static void clearModels() {
         ARMOR_MODELS.values().forEach(SkinnedMesh::destroy);
         ARMOR_MODELS.clear();
@@ -81,6 +66,11 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
             return mesh;
         });
         ARMOR_MODELS.put(rl, skinnedMesh);
+    }
+
+    public static boolean shouldHidePart(AbstractEntityCitizen citizen, EquipmentSlot slot){
+
+        return !citizen.getItemBySlot(slot).isEmpty() && shouldRenderArmorMap.getOrDefault(citizen.getUUID(), true);
     }
 
     public static SkinnedMesh getCachedModel(Item item) {
@@ -108,8 +98,11 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
 
         if(jobEntry == null)
             return;
-        if(!validRenderEntries.contains(jobEntry)) return;
-
+        if(!validRenderEntries.contains(jobEntry)){
+            shouldRenderArmorMap.put(entityliving.getUUID(), false);
+            return;
+        }
+        shouldRenderArmorMap.put(entityliving.getUUID(), true);
 
         for(EquipmentSlot slot : EquipmentSlot.values()) {
             if (slot.getType() == Type.ARMOR) {

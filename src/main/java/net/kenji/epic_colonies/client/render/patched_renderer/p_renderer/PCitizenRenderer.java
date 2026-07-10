@@ -122,29 +122,16 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
         return jobEntry == null ? citizenMesh : meshMap.getOrDefault(jobEntry, defaultMesh);
     }
 
-    @Override
-    public void render(AbstractEntityCitizen entity, CitizenEntityPatch<AbstractEntityCitizen> entitypatch, RenderBipedCitizen renderer, MultiBufferSource buffer, PoseStack poseStack, int packedLight, float partialTicks) {
-        AssetAccessor<EpicColoniesMesh> mesh = this.getCitizenMesh(entity, !entity.isFemale());
 
-        if(mesh.get().hat != null) {
-            if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
-
-                mesh.get().hat.setHidden(true);
-                Log.info("Logging Hidden!");
-
-            } else {
-                mesh.get().hat.setHidden(false);
-            }
-        }
-
-        super.render(entity, entitypatch, renderer, buffer, poseStack, packedLight, partialTicks);
-    }
     @Override
     protected void prepareModel(EpicColoniesMesh mesh, AbstractEntityCitizen entity, CitizenEntityPatch<AbstractEntityCitizen> entitypatch, RenderBipedCitizen renderer) {
         super.prepareModel(mesh, entity, entitypatch, renderer); // runs mesh.initialize() (resets all parts to visible)
 
         if (mesh.hat != null) {
-            mesh.hat.setHidden(!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty());
+            mesh.hat.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.HEAD));
+        }
+        if (mesh.breast != null) {
+            mesh.breast.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.CHEST));
         }
     }
     @Override
