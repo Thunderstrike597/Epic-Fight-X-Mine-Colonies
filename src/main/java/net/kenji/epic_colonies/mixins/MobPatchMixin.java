@@ -26,7 +26,7 @@ public class MobPatchMixin { @Inject(method = "commonMobUpdateMotion", at = @At(
             } else if (patch.getEntityState().inaction() && considerInaction) {
                 patch.currentLivingMotion = LivingMotions.INACTION;
             } else {
-                if(patch.getCitizenPatchData().currentOptionalMotion != null && patch.getCitizenPatchData().currentOptionalMotion != EpicColoniesLivingMotions.EMPTY){
+                if(patch.getCitizenPatchData().currentOptionalMotion != null && patch.getCitizenPatchData().currentOptionalMotion != LivingMotions.NONE){
                     patch.currentLivingMotion = patch.getCitizenPatchData().currentOptionalMotion;
                 }
                 else if (patch.getOriginal().getVehicle() != null)
@@ -46,7 +46,7 @@ public class MobPatchMixin { @Inject(method = "commonMobUpdateMotion", at = @At(
                 }
             }
             if (patch.getCitizenPatchData().currentOptionalCompositeMotion != null
-                    && patch.getCitizenPatchData().currentOptionalCompositeMotion != EpicColoniesLivingMotions.EMPTY) {
+                    && patch.getCitizenPatchData().currentOptionalCompositeMotion != LivingMotions.NONE) {
                 patch.currentCompositeMotion = patch.getCitizenPatchData().currentOptionalCompositeMotion;
             } else {
                 patch.currentCompositeMotion = LivingMotions.NONE; // always a safe, harmless composite key

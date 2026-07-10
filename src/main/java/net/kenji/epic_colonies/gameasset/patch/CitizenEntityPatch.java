@@ -5,6 +5,7 @@ import com.minecolonies.api.colony.ICitizenDataView;
 import com.minecolonies.api.colony.jobs.IJob;
 import com.minecolonies.api.colony.jobs.IJobView;
 import com.minecolonies.api.colony.jobs.registry.JobEntry;
+import com.minecolonies.api.entity.ai.ITickingStateAI;
 import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
@@ -17,6 +18,7 @@ import com.minecolonies.core.entity.ai.minimal.EntityAIFloat;
 import com.minecolonies.core.entity.ai.workers.builder.EntityAIStructureBuilder;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.other.SittingEntity;
+import com.mojang.datafixers.util.Pair;
 import net.kenji.epic_colonies.api.data.CitizenMeshCache;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
@@ -91,8 +93,8 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
 
     public static class CitizenPatchData{
-        public LivingMotion currentOptionalMotion = EpicColoniesLivingMotions.EMPTY;
-        public LivingMotion currentOptionalCompositeMotion = EpicColoniesLivingMotions.EMPTY;
+        public LivingMotion currentOptionalMotion = LivingMotions.NONE;
+        public LivingMotion currentOptionalCompositeMotion = LivingMotions.NONE;
         public LivingMotion prevOptionalCompositeMotion = null;
         public LivingMotion prevOptionalMotion = null;
 
@@ -174,8 +176,12 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         }
         return EpicColoniesArmatures.CITIZEN_REGULAR.get();
     }
+    public boolean isCitizenAsleep(){
+        return this.getOriginal().isSleeping() || this.original.getCitizenSleepHandler().isAsleep() || citizenPatchData.isAsleep || this.citizenPatchData.currentOptionalMotion == EpicColoniesLivingMotions.SIT_SLEEP;
+    }
+
     public void tickEyesAnim(){
-        if(this.getOriginal().isSleeping() || this.original.getCitizenSleepHandler().isAsleep() || citizenPatchData.isAsleep)
+        if(isCitizenAsleep())
             this.eyebrowAnim = EpicColoniesAnimations.CITIZEN_EYES_CLOSED;
         else this.eyebrowAnim = DEFAULT_BROW_ANIM;
     }
@@ -255,6 +261,9 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         AbstractEntityCitizen citizen = this.getOriginal();
         if(!(citizen instanceof EntityCitizen entityCitizen)) return;
         IState state = entityCitizen.getCitizenAI().getState();
+        IJob iJob = citizen.getCitizenJobHandler().getColonyJob();
+
+        IState workerState = iJob != null ? iJob.getWorkerAI().getState() : null;
         AnimationPlayer animPlayer = animator.getPlayerFor(null);
         LivingMotion motion = null;
         LivingMotion compositeMotion = null;
@@ -267,13 +276,12 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
                 didJump = true;
             }
         }
-        else if (citizen.getVehicle() instanceof SittingEntity || (citizen.getCitizenSleepHandler().isAsleep() && citizen.getFeetBlockState().isSolidRender(citizen.level(), citizen.blockPosition()) && citizen.getPose() != Pose.SLEEPING)) {
+        else if (citizen.getVehicle() instanceof SittingEntity) {
             motion = LivingMotions.SIT;
 
         }
         else if (citizen.getPose() == Pose.SLEEPING) {
             motion = LivingMotions.SLEEP;
-
         }
 
         if(isMoving()) {
@@ -297,9 +305,12 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         }
 
 
-        if(citizen.getCitizenJobHandler().getColonyJob() != null) {
-            if (citizen.getCitizenJobHandler().getColonyJob().getWorkerAI().getState() == AIWorkerState.MINE_BLOCK) {
-                compositeMotion = LivingMotions.DIGGING;
+        if(workerState != null) {
+            Pair<LivingMotion, Boolean> statePair = EpicColoniesLivingMotions.getLivingMotionFromAiState(workerState);
+            if(statePair != null){
+                if(statePair.getSecond())
+                    compositeMotion = statePair.getFirst();
+                else motion = statePair.getFirst();
             }
         }
 
@@ -401,7 +412,6 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
                     this.getClientAnimator().getLivingAnimation(citizenPatchData.currentOptionalCompositeMotion, null);
             if(anim == null){
                 anim = this.getClientAnimator().getCompositeLivingMotion(citizenPatchData.currentOptionalCompositeMotion);
-                Log.info("Living Anim Null, Reassigning! | Anim: " + anim);
             }
 
             if (anim != null) {
@@ -413,11 +423,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
                 if(animPlayer.getAnimation() == null || playingAnim != checkingAnim) {
                     getAnimator().playAnimation(anim, 0.18F);
-                    if(animPlayer.getAnimation() != null) {
-                        Log.info("Playing Anim From Player: " + playingAnim);
 
-                        Log.info("Playing Anim: " + checkingAnim);
-                    }
                     compositeAnimPlayCounter = MAX_COMPOSITE_PLAY_COUNTER;
                 }
             }
@@ -512,6 +518,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         animator.addLivingAnimation(LivingMotions.EAT, EpicColoniesAnimations.CITIZEN_EAT);
         animator.addLivingAnimation(LivingMotions.CLIMB, EpicColoniesAnimations.CITIZEN_CLIMB);
         animator.addLivingAnimation(LivingMotions.DIGGING, EpicColoniesAnimations.CITIZEN_DIG);
+        animator.addLivingAnimation(EpicColoniesLivingMotions.SIT_SLEEP, Animations.BIPED_SIT);
 
         animator.addLivingAnimation(LivingMotions.IDLE, Animations.BIPED_IDLE);
         animator.addLivingAnimation(LivingMotions.WALK, EpicColoniesAnimations.CITIZEN_WALK);

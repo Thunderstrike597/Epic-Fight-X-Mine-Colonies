@@ -22,12 +22,12 @@ public record ClientCitizenSyncPacket(int entityId, UUID uuid, CitizenEntityPatc
 
     private static int fillNullMotion(LivingMotion motion){
         if(motion == null){
-            return EpicColoniesLivingMotions.EMPTY.universalOrdinal();
+            return LivingMotions.NONE.universalOrdinal();
         }
         return motion.universalOrdinal();
     }
     private static LivingMotion getNullableMotion(int motionId){
-        if(motionId == EpicColoniesLivingMotions.EMPTY.universalOrdinal()){
+        if(motionId == LivingMotions.NONE.universalOrdinal()){
             return null;
         }
         return LivingMotion.ENUM_MANAGER.get(motionId);

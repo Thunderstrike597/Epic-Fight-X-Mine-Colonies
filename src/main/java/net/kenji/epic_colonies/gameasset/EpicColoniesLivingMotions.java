@@ -1,33 +1,38 @@
 package net.kenji.epic_colonies.gameasset;
 
+import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
 import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
+import com.mojang.datafixers.util.Pair;
 import yesman.epicfight.api.animation.LivingMotion;
 import yesman.epicfight.api.animation.LivingMotions;
 
 public enum EpicColoniesLivingMotions implements LivingMotion {
-    EMPTY(null, null),
-    JOG(null, null),
-    SLEEPING(CitizenAIState.SLEEP, LivingMotions.SLEEP),
-    EATING(CitizenAIState.EATING, LivingMotions.EAT);
+    JOG(null, null, false),
+    DIG(AIWorkerState.MINE_BLOCK, LivingMotions.DIGGING,true),
+    SIT_SLEEP(AIWorkerState.GUARD_SLEEP, null, false);
 
 
     private final IState citizenState;
     private final LivingMotion parentMotion;
+    private final boolean isComposite;
     public final int id;
 
-    EpicColoniesLivingMotions(IState citizenState, LivingMotion parentMotion){
+    EpicColoniesLivingMotions(IState citizenState, LivingMotion parentMotion, boolean isComposite){
         this.citizenState = citizenState;
         this.parentMotion = parentMotion;
         this.id = LivingMotion.ENUM_MANAGER.assign(this);
+        this.isComposite = isComposite;
     }
 
-    public static LivingMotion getLivingMotionFromAiState(IState iState){
+    public static Pair<LivingMotion, Boolean> getLivingMotionFromAiState(IState iState){
         for(EpicColoniesLivingMotions livingMotion : EpicColoniesLivingMotions.values()){
-            if(livingMotion.parentMotion == null || livingMotion.citizenState == null) continue;
+            if(livingMotion.citizenState == null) continue;
 
             if(livingMotion.citizenState == iState){
-                return livingMotion.parentMotion;
+                if(livingMotion.parentMotion != null)
+                    return new Pair<>(livingMotion.parentMotion, livingMotion.isComposite);
+                return new Pair<>(livingMotion, livingMotion.isComposite);
             }
         }
         return null;

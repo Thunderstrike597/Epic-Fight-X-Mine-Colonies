@@ -5,7 +5,6 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.kenji.epic_colonies.EpicColonies;
 import net.kenji.epic_colonies.api.MobPatchFactory;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
-import net.kenji.epic_colonies.commands.SetChildCommand;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
 import net.minecraft.commands.CommandSourceStack;
