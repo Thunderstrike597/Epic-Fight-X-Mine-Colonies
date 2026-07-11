@@ -4,21 +4,13 @@ import com.google.common.collect.ImmutableMap;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.ICitizenDataView;
 import com.minecolonies.api.colony.jobs.IJob;
-import com.minecolonies.api.colony.jobs.IJobView;
-import com.minecolonies.api.colony.jobs.registry.JobEntry;
-import com.minecolonies.api.entity.ai.ITickingStateAI;
-import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
-import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
-import com.minecolonies.core.colony.CitizenData;
-import com.minecolonies.core.colony.jobs.JobBuilder;
 import com.minecolonies.core.entity.ai.minimal.EntityAICitizenAvoidEntity;
 import com.minecolonies.core.entity.ai.minimal.EntityAIEatTask;
-import com.minecolonies.core.entity.ai.minimal.EntityAIFloat;
-import com.minecolonies.core.entity.ai.workers.builder.EntityAIStructureBuilder;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.other.SittingEntity;
+import com.minecolonies.core.entity.visitor.VisitorCitizen;
 import com.mojang.datafixers.util.Pair;
 import net.kenji.epic_colonies.api.CitizenPatchData;
 import net.kenji.epic_colonies.api.data.CitizenMeshCache;
@@ -29,45 +21,30 @@ import net.kenji.epic_colonies.gameasset.armatures.CitizenArmature;
 import net.kenji.epic_colonies.mixins.LivingEntityAccessor;
 import net.kenji.epic_colonies.network.ClientCitizenSyncPacket;
 import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
-import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.CrossbowItem;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ProjectileWeaponItem;
-import net.minecraft.world.item.UseAnim;
-import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingEvent;
-import org.jline.utils.Log;
 import yesman.epicfight.api.animation.*;
 import yesman.epicfight.api.animation.types.DynamicAnimation;
-import yesman.epicfight.api.animation.types.SelectiveAnimation;
 import yesman.epicfight.api.animation.types.StaticAnimation;
 import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.animation.Layer;
-import yesman.epicfight.client.world.capabilites.entitypatch.player.AbstractClientPlayerPatch;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.gameasset.MobCombatBehaviors;
 import yesman.epicfight.model.armature.HumanoidArmature;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
-import yesman.epicfight.world.capabilities.entitypatch.mob.SkeletonPatch;
-import yesman.epicfight.world.capabilities.entitypatch.mob.WitherSkeletonPatch;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
 import yesman.epicfight.world.capabilities.item.WeaponCategory;
-import yesman.epicfight.world.entity.ai.goal.AnimatedAttackGoal;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
-import yesman.epicfight.world.entity.ai.goal.TargetChasingGoal;
 import yesman.epicfight.world.item.*;
 
 import javax.annotation.Nullable;
@@ -76,7 +53,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends HumanoidMobPatch<AbstractEntityCitizen> {
+public class VisitorEntityPatch<E extends VisitorCitizen> extends HumanoidMobPatch<VisitorCitizen> {
     public boolean shouldRun = false;
     public static Map<UUID, CitizenPatchData> citizenPatchDataMap = new HashMap<>();
     protected CitizenPatchData citizenPatchData = new CitizenPatchData();
@@ -89,7 +66,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     public AnimationManager.AnimationAccessor<? extends StaticAnimation> eyebrowAnim;
     public AnimationManager.AnimationAccessor<? extends StaticAnimation> eyeMoveAnim;
 
-    public CitizenEntityPatch() {
+    public VisitorEntityPatch() {
         super(Factions.VILLAGER);
     }
     public boolean didJump = false;
@@ -228,11 +205,9 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
 
     public void tickCurrentOptionalMotion() {
-        AbstractEntityCitizen citizen = this.getOriginal();
-        IState state = citizen instanceof EntityCitizen entityCitizen ? entityCitizen.getCitizenAI().getState() : citizen.getEntityStateController().getState();
-        IJob iJob = citizen.getCitizenJobHandler().getColonyJob();
+        VisitorCitizen citizen = this.getOriginal();
+        IState state = citizen.getEntityStateController().getState();
 
-        IState workerState = iJob != null ? iJob.getWorkerAI().getState() : null;
         AnimationPlayer animPlayer = animator.getPlayerFor(null);
         LivingMotion motion = null;
         LivingMotion compositeMotion = null;
@@ -271,16 +246,6 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
         if (state == EntityAIEatTask.EatingState.EAT) {
             compositeMotion = LivingMotions.EAT;
-        }
-
-
-        if(workerState != null) {
-            Pair<LivingMotion, Boolean> statePair = EpicColoniesLivingMotions.getLivingMotionFromAiState(workerState);
-            if(statePair != null){
-                if(statePair.getSecond())
-                    compositeMotion = statePair.getFirst();
-                else motion = statePair.getFirst();
-            }
         }
 
 

@@ -4,7 +4,9 @@ import com.minecolonies.api.entity.ModEntities;
 import net.kenji.epic_colonies.client.render.patched_renderer.*;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
+import net.kenji.epic_colonies.gameasset.patch.MercenaryPatch;
 import net.kenji.epic_colonies.gameasset.patch.MinecoloniesMonsterPatch;
+import net.kenji.epic_colonies.gameasset.patch.VisitorEntityPatch;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -45,6 +47,18 @@ public class MobPatchFactory {
                 EpicColoniesArmatures.CITIZEN_REGULAR,
                 (e) -> CitizenEntityPatch::new,
                 (context, type) -> new CitizenPatchRenderer((EntityRendererProvider.Context) context, type)
+        ));
+        mobPatches.add(new MobPatchDefinitions(
+                ModEntities.VISITOR,
+                EpicColoniesArmatures.CITIZEN_REGULAR,
+                (e) -> CitizenEntityPatch::new,
+                (context, type) -> new CitizenPatchRenderer((EntityRendererProvider.Context) context, type)
+        ));
+        mobPatches.add(new MobPatchDefinitions(
+                ModEntities.MERCENARY,
+                EpicColoniesArmatures.CITIZEN_REGULAR,
+                (e) -> MercenaryPatch::new,
+                (context, type) -> new MercenaryPatchRenderer((EntityRendererProvider.Context) context, type)
         ));
 
         mobPatches.add(new MobPatchDefinitions(

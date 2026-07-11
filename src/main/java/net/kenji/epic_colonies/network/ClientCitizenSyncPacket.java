@@ -1,5 +1,6 @@
 package net.kenji.epic_colonies.network;
 
+import net.kenji.epic_colonies.api.CitizenPatchData;
 import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
 import net.minecraft.client.Minecraft;
@@ -17,7 +18,7 @@ import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-public record ClientCitizenSyncPacket(int entityId, UUID uuid, CitizenEntityPatch.CitizenPatchData data) {
+public record ClientCitizenSyncPacket(int entityId, UUID uuid, CitizenPatchData data) {
 
 
     private static int fillNullMotion(LivingMotion motion){
@@ -57,7 +58,7 @@ public record ClientCitizenSyncPacket(int entityId, UUID uuid, CitizenEntityPatc
         LivingMotion prevCompositeMotion = getNullableMotion(prevCompositeMotionId);
         LivingMotion prevMotion = getNullableMotion(prevMotionId);
 
-        CitizenEntityPatch.CitizenPatchData data = new CitizenEntityPatch.CitizenPatchData(entityUuid, motion, compositeMotion, prevCompositeMotion, prevMotion,isAsleep);
+        CitizenPatchData data = new CitizenPatchData(entityUuid, motion, compositeMotion, prevCompositeMotion, prevMotion,isAsleep);
 
         return new ClientCitizenSyncPacket(entityId, entityUuid, data);
     }

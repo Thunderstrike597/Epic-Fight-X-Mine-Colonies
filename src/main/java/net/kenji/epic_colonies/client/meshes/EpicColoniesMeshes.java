@@ -2,6 +2,8 @@ package net.kenji.epic_colonies.client.meshes;
 
 import com.minecolonies.api.colony.jobs.ModJobs;
 import com.minecolonies.api.colony.jobs.registry.JobEntry;
+import com.minecolonies.api.entity.ModEntities;
+import com.minecolonies.core.client.model.MercenaryModel;
 import com.minecolonies.core.colony.buildings.modules.CourierAssignmentModule;
 import net.kenji.epic_colonies.EpicColonies;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
@@ -27,10 +29,16 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> BUILDER_MALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> KNIGHT_MALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> ARCHER_MALE;
+
     public static final Meshes.MeshAccessor<EpicColoniesMesh> COOK_MALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> BAKER_MALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> MINER_MALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> BLACKSMITH_MALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> SMELTER_MALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> FARMER_MALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> SHEPHERD_MALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> COWHERDER_MALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> PLANTER_MALE;
 
 
@@ -44,10 +52,16 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> BUILDER_FEMALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> KNIGHT_FEMALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> ARCHER_FEMALE;
+
     public static final Meshes.MeshAccessor<EpicColoniesMesh> COOK_FEMALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> BAKER_FEMALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> MINER_FEMALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> BLACKSMITH_FEMALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> SMELTER_FEMALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> FARMER_FEMALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> SHEPHERD_FEMALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> COWHERDER_FEMALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> PLANTER_FEMALE;
 
 
@@ -66,6 +80,8 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> HUMANOID_RAIDER;
 
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> MERCENARY;
+
 
     static {
         DEFAULT_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/default_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
@@ -77,10 +93,15 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
         BUILDER_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/builder_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
 
         KNIGHT_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/knight_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        ARCHER_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/archer_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         COOK_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/cook_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         BAKER_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/baker_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         MINER_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/miner_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         BLACKSMITH_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/blacksmith_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        SMELTER_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/smelter_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        FARMER_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/farmer_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        SHEPHERD_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/shepherd_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        COWHERDER_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/cow_herder_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         PLANTER_MALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/planter_male", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
 
         DEFAULT_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/default_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
@@ -91,10 +112,15 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
 
         BUILDER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/builder_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         KNIGHT_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/knight_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        ARCHER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/archer_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         COOK_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/cook_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         BAKER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/baker_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         MINER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/miner_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         BLACKSMITH_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/blacksmith_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        SMELTER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/smelter_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        FARMER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/farmer_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        SHEPHERD_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/shepherd_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        COWHERDER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/cow_herder_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         PLANTER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/planter_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
 
 
@@ -112,6 +138,9 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
 
         HUMANOID_RAIDER = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/raider/barbarian", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
 
+
+        MERCENARY = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/other/mercenary", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+
     }
 
     /**
@@ -121,17 +150,33 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
     public static void buildJobMeshMaps() {
         jobMeshMapMale.put(ModJobs.builder.get(), BUILDER_MALE);
         jobMeshMapMale.put(ModJobs.knight.get(), KNIGHT_MALE);
+        jobMeshMapMale.put(ModJobs.archer.get(), ARCHER_MALE);
+
         jobMeshMapMale.put(ModJobs.cook.get(), COOK_MALE);
         jobMeshMapMale.put(ModJobs.baker.get(), BAKER_MALE);
         jobMeshMapMale.put(ModJobs.miner.get(), MINER_MALE);
         jobMeshMapMale.put(ModJobs.blacksmith.get(), BLACKSMITH_MALE);
+        jobMeshMapMale.put(ModJobs.smelter.get(), SMELTER_MALE);
+        jobMeshMapMale.put(ModJobs.farmer.get(), FARMER_MALE);
+        jobMeshMapMale.put(ModJobs.shepherd.get(), SHEPHERD_MALE);
+        jobMeshMapMale.put(ModJobs.cowboy.get(), COWHERDER_MALE);
+        jobMeshMapMale.put(ModJobs.planter.get(), PLANTER_MALE);
+
+
 
         jobMeshMapFemale.put(ModJobs.builder.get(), BUILDER_FEMALE);
         jobMeshMapFemale.put(ModJobs.knight.get(), KNIGHT_FEMALE);
+        jobMeshMapFemale.put(ModJobs.archer.get(), ARCHER_FEMALE);
+
         jobMeshMapFemale.put(ModJobs.cook.get(), COOK_FEMALE);
         jobMeshMapFemale.put(ModJobs.baker.get(), BAKER_FEMALE);
         jobMeshMapFemale.put(ModJobs.miner.get(), MINER_FEMALE);
         jobMeshMapFemale.put(ModJobs.blacksmith.get(), BLACKSMITH_FEMALE);
+        jobMeshMapFemale.put(ModJobs.smelter.get(), SMELTER_FEMALE);
+        jobMeshMapFemale.put(ModJobs.farmer.get(), FARMER_FEMALE);
+        jobMeshMapFemale.put(ModJobs.shepherd.get(), SHEPHERD_FEMALE);
+        jobMeshMapFemale.put(ModJobs.cowboy.get(), COWHERDER_FEMALE);
+        jobMeshMapFemale.put(ModJobs.planter.get(), PLANTER_FEMALE);
 
     }
 

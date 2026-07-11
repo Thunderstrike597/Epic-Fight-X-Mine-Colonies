@@ -130,8 +130,23 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
         if (mesh.hat != null) {
             mesh.hat.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.HEAD));
         }
+        if (mesh.jacket != null) {
+            mesh.jacket.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.CHEST));
+        }
+        if (mesh.leftSleeve != null) {
+            mesh.leftSleeve.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.CHEST));
+        }
+        if (mesh.rightSleeve != null) {
+            mesh.rightSleeve.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.CHEST));
+        }
         if (mesh.breast != null) {
             mesh.breast.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.CHEST));
+        }
+        if (mesh.leftPants != null) {
+            mesh.leftPants.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.LEGS));
+        }
+        if (mesh.rightPants != null) {
+            mesh.rightPants.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.LEGS));
         }
     }
     @Override
