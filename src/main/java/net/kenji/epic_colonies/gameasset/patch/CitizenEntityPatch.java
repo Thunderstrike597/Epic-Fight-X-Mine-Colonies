@@ -1,5 +1,6 @@
 package net.kenji.epic_colonies.gameasset.patch;
 
+import com.google.common.collect.ImmutableMap;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.ICitizenDataView;
 import com.minecolonies.api.colony.jobs.IJob;
@@ -57,6 +58,7 @@ import yesman.epicfight.model.armature.HumanoidArmature;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
+import yesman.epicfight.world.capabilities.entitypatch.mob.WitherSkeletonPatch;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
 import yesman.epicfight.world.capabilities.item.WeaponCategory;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
@@ -65,6 +67,7 @@ import yesman.epicfight.world.item.*;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends HumanoidMobPatch<AbstractEntityCitizen> {
@@ -233,6 +236,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         }
     }
 
+
     protected void setSleepDir(){
         Direction bedDir = this.getOriginal().getBedOrientation();
         if (citizenPatchData.currentOptionalMotion == LivingMotions.SLEEP && bedDir != null) {
@@ -392,6 +396,13 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         return super.getHoldingItemWeaponMotionBuilder();
     }
 
+    protected void setWeaponMotions() {
+        super.setWeaponMotions();
+        this.weaponLivingMotions.put(CapabilityItem.WeaponCategories.SWORD, ImmutableMap.of(CapabilityItem.Styles.ONE_HAND, Set.of(Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN), Pair.of(EpicColoniesLivingMotions.JOG, EpicColoniesAnimations.CITIZEN_JOG), Pair.of(LivingMotions.WALK, EpicColoniesAnimations.CITIZEN_WALK), Pair.of(LivingMotions.IDLE, Animations.BIPED_IDLE))));
+        this.weaponLivingMotions.put(CapabilityItem.WeaponCategories.TACHI, ImmutableMap.of(CapabilityItem.Styles.ONE_HAND, Set.of(Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_SPEAR), Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_TACHI), Pair.of(LivingMotions.WALK, Animations.BIPED_HOLD_TACHI), Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_TACHI))));
+        this.weaponLivingMotions.put(CapabilityItem.WeaponCategories.LONGSWORD, ImmutableMap.of(CapabilityItem.Styles.COMMON, Set.of(Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_LONGSWORD), Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_LONGSWORD), Pair.of(LivingMotions.WALK, Animations.BIPED_HOLD_LONGSWORD), Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_LONGSWORD))));
+        this.weaponLivingMotions.put(CapabilityItem.WeaponCategories.GREATSWORD, ImmutableMap.of(CapabilityItem.Styles.COMMON, Set.of(Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_GREATSWORD), Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_GREATSWORD), Pair.of(LivingMotions.WALK, Animations.BIPED_HOLD_GREATSWORD), Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_GREATSWORD))));
+    }
     public void playCompositeOnLayer(AnimationManager.AnimationAccessor<? extends StaticAnimation> anim, Layer.Priority layerPriority){
         AnimationPlayer animPlayer = this.getClientAnimator().getCompositeLayer(layerPriority).animationPlayer;
 

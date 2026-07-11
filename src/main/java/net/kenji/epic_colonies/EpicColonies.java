@@ -62,6 +62,10 @@ public class EpicColonies {
         MinecraftForge.EVENT_BUS.register(this);
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modEventBus.addListener(EpicFightClientEvents::registerPatchedEntityRenderers);        }
+
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, EpicColoniesConfigClient.SPEC, "EpicColonies-Client.toml");
+
+
     }
 
     public void commonSetup(FMLCommonSetupEvent event) {

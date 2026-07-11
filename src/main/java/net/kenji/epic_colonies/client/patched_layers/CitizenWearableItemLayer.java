@@ -9,6 +9,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import java.util.*;
 
+import com.mojang.datafixers.util.Pair;
+import net.kenji.epic_colonies.EpicColoniesConfigClient;
 import net.kenji.epic_colonies.mixins.AccessorHumanoidArmorLayer;
 import net.kenji.epic_colonies.mixins.AccessorWearableItemLayer;
 import net.minecraft.client.Minecraft;
@@ -50,7 +52,8 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
     private final TextureAtlas armorTrimAtlas;
 
     private static final List<JobEntry> validRenderEntries = new ArrayList<>();
-    private static final Map<UUID, Boolean> shouldRenderArmorMap = new HashMap<>();
+
+    private static final Map<UUID, Map<EquipmentSlot, Boolean>> shouldRenderArmorMap = new HashMap<>();
     public static void clearModels() {
         ARMOR_MODELS.values().forEach(SkinnedMesh::destroy);
         ARMOR_MODELS.clear();
@@ -69,8 +72,10 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
     }
 
     public static boolean shouldHidePart(AbstractEntityCitizen citizen, EquipmentSlot slot){
-
-        return !citizen.getItemBySlot(slot).isEmpty() && shouldRenderArmorMap.getOrDefault(citizen.getUUID(), true);
+        return !citizen.getItemBySlot(slot).isEmpty()
+                && shouldRenderArmorMap
+                .getOrDefault(citizen.getUUID(), Collections.emptyMap())
+                .getOrDefault(slot, true);
     }
 
     public static SkinnedMesh getCachedModel(Item item) {
@@ -86,6 +91,10 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
         validRenderEntries.add(ModJobs.archer.get());
     }
 
+    private boolean hidePartHelmet(EquipmentSlot slot){
+        return slot == EquipmentSlot.HEAD && EpicColoniesConfigClient.HIDE_CITIZEN_HELMET.get();
+    }
+
     public void renderLayer(T entitypatch, E entityliving, HumanoidArmorLayer<E, M, M> vanillaLayer, PoseStack poseStack, MultiBufferSource buf, int packedLight, OpenMatrix4f[] poses, float bob, float yRot, float xRot, float partialTicks) {
         ICitizenDataView view = entityliving.getCitizenDataView();
         JobEntry jobEntry = null;
@@ -96,16 +105,34 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
             jobEntry = jobView.getEntry();
         }
 
-        if(jobEntry == null)
-            return;
-        if(!validRenderEntries.contains(jobEntry)){
-            shouldRenderArmorMap.put(entityliving.getUUID(), false);
-            return;
-        }
-        shouldRenderArmorMap.put(entityliving.getUUID(), true);
-
         for(EquipmentSlot slot : EquipmentSlot.values()) {
             if (slot.getType() == Type.ARMOR) {
+
+                if(EpicColoniesConfigClient.JOB_ONLY_ARMOR.get()) {
+                    if (jobEntry == null)
+                        return;
+                    String jobName = jobEntry.getKey().toString();
+                    if (!EpicColoniesConfigClient.VISIBLE_ARMOR_JOBS.get().contains(jobName)){
+                        Map<EquipmentSlot, Boolean> allHidden = new EnumMap<>(EquipmentSlot.class);
+                        for (EquipmentSlot slot2 : EquipmentSlot.values()) {
+                            allHidden.put(slot2, false);
+                        }
+                        shouldRenderArmorMap.put(entityliving.getUUID(), allHidden);
+                        return;
+                    }
+                }
+                if(hidePartHelmet(slot)) {
+                    shouldRenderArmorMap
+                            .computeIfAbsent(entityliving.getUUID(), id -> new EnumMap<>(EquipmentSlot.class))
+                            .put(slot, false);
+                    continue;
+                }
+
+                shouldRenderArmorMap
+                        .computeIfAbsent(entityliving.getUUID(), id -> new EnumMap<>(EquipmentSlot.class))
+                        .put(slot, true);
+
+
                 boolean firstPersonChest = false;
                 if (entitypatch.isFirstPerson() && this.firstPersonModel) {
                     if (slot != EquipmentSlot.CHEST) {
@@ -114,7 +141,6 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
 
                     firstPersonChest = true;
                 }
-               // if (slot == EquipmentSlot.HEAD) return;
 
                 if (slot != EquipmentSlot.HEAD || !this.firstPersonModel) {
                     ItemStack itemstack = entityliving.getItemBySlot(slot);
