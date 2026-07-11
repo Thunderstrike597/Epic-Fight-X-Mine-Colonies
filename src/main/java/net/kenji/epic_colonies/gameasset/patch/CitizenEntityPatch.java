@@ -35,10 +35,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.state.BlockState;
@@ -58,10 +60,13 @@ import yesman.epicfight.model.armature.HumanoidArmature;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
+import yesman.epicfight.world.capabilities.entitypatch.mob.SkeletonPatch;
 import yesman.epicfight.world.capabilities.entitypatch.mob.WitherSkeletonPatch;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
 import yesman.epicfight.world.capabilities.item.WeaponCategory;
+import yesman.epicfight.world.entity.ai.goal.AnimatedAttackGoal;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
+import yesman.epicfight.world.entity.ai.goal.TargetChasingGoal;
 import yesman.epicfight.world.item.*;
 
 import javax.annotation.Nullable;
@@ -127,6 +132,15 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
         }
     }
+
+
+    @Override
+    public void setAIAsInfantry(boolean holdingRangedWeapon) {
+        if(!holdingRangedWeapon){
+            super.setAIAsInfantry(false);
+        }
+    }
+
 
     @Override
     public void onAddedToWorld() {
@@ -217,23 +231,6 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         super.serverTick(event); // already dispatches to clientTick()/serverTick() internally, including onCitizenTick() on the client
         onCitizenTick(); // only need to run it here for the server, since clientTick() already covers the client path
 
-    }
-
-    private void debugSetChild() {
-
-        if (this.getOriginal().getCitizenData() != null) {
-            //if (this.getOriginal().getItemBySlot(EquipmentSlot.FEET).getItem() == Items.LEATHER_BOOTS) {
-                this.getOriginal().setIsChild(true);
-                this.getOriginal().getCitizenData().setIsChild(true);
-            //}
-        }
-
-        if (this.getOriginal().getCitizenDataView() != null) {
-            //if (this.getOriginal().getItemBySlot(EquipmentSlot.FEET).getItem() == Items.LEATHER_BOOTS) {
-                this.getOriginal().setIsChild(true);
-                Log.info("Logging Child Set True For DataView!");
-            //}
-        }
     }
 
 
@@ -335,34 +332,9 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
     @Override
     public void updateMotion(boolean considerInaction) {
-        super.commonMobUpdateMotion(considerInaction);
-
-        if (this.original.isUsingItem() && citizenPatchData.currentOptionalCompositeMotion == null) {
-            CapabilityItem activeItem = this.getHoldingItemCapability(this.original.getUsedItemHand());
-            UseAnim useAnim = this.original.getItemInHand(this.original.getUsedItemHand()).getUseAnimation();
-            UseAnim secondUseAnim = activeItem.getUseAnimation(this);
-
-            if (useAnim == UseAnim.BLOCK || secondUseAnim == UseAnim.BLOCK)
-                if (activeItem.getWeaponCategory() == CapabilityItem.WeaponCategories.SHIELD)
-                    currentCompositeMotion = LivingMotions.BLOCK_SHIELD;
-                else
-                    currentCompositeMotion = LivingMotions.BLOCK;
-            else if (useAnim == UseAnim.BOW || useAnim == UseAnim.SPEAR)
-                currentCompositeMotion = LivingMotions.AIM;
-            else if (useAnim == UseAnim.CROSSBOW)
-                currentCompositeMotion = LivingMotions.RELOAD;
-            else
-                currentCompositeMotion = currentLivingMotion;
-        } else if(citizenPatchData.currentOptionalCompositeMotion == null) {
-            if (CrossbowItem.isCharged(this.original.getMainHandItem()))
-                currentCompositeMotion = LivingMotions.AIM;
-            else if (this.getClientAnimator().getCompositeLayer(Layer.Priority.MIDDLE).animationPlayer.getAnimation().get().isReboundAnimation())
-                currentCompositeMotion = LivingMotions.NONE;
-            else if (this.original.swinging && this.original.getSleepingPos().isEmpty())
-                currentCompositeMotion = LivingMotions.DIGGING;
-            else
-                currentCompositeMotion = currentLivingMotion;
-        }
+        if(this.getOriginal().getMainHandItem().getItem() instanceof ProjectileWeaponItem)
+            super.commonAggressiveRangedMobUpdateMotion(considerInaction);
+        else super.commonMobUpdateMotion(considerInaction);
     }
 
     @Override

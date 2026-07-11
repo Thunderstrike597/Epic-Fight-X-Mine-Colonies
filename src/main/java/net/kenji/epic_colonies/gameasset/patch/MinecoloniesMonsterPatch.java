@@ -5,7 +5,10 @@ import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.armatures.CitizenArmature;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.UseAnim;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import yesman.epicfight.api.animation.AnimationPlayer;
 import yesman.epicfight.api.animation.Animator;
@@ -88,8 +91,10 @@ public class MinecoloniesMonsterPatch<E extends AbstractEntityMinecoloniesMonste
 
 
     @Override
-    public void updateMotion(boolean b) {
-        super.commonMobUpdateMotion(b);
+    public void updateMotion(boolean considerInaction) {
+        if(this.getOriginal().getMainHandItem().getItem() instanceof ProjectileWeaponItem)
+            super.commonAggressiveRangedMobUpdateMotion(considerInaction);
+        else super.commonMobUpdateMotion(considerInaction);
     }
 
     @Override

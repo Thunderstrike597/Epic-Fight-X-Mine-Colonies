@@ -11,6 +11,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
+import net.minecraft.world.item.ProjectileWeaponItem;
 import org.jline.utils.Log;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -55,6 +56,7 @@ public abstract class MixinAttackMoveAiRaider {
     public void stopVanillaAttack(CallbackInfoReturnable<IState> cir){
         AttackMoveAI self = (AttackMoveAI) (Object)this;
         AccessorTargetAi selfMob = (AccessorTargetAi) self;
+        if(selfMob.getUser().getMainHandItem().getItem() instanceof ProjectileWeaponItem) return;
         cir.cancel();
         if (selfMob.invokeCheckForTarget() && this.canAttack()) {
             if (this.nextAttackTime < selfMob.getUser().level().getGameTime() && this.isInDistanceForAttack(selfMob.getUser().getTarget())) {
