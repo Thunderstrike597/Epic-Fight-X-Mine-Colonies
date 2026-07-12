@@ -144,18 +144,14 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         }
     }
 
-    @Override
-    public Joint getParentJointOfHand(InteractionHand hand) {
-        if(this.getArmature() instanceof CitizenArmature citizenArmature){
-            return hand == InteractionHand.MAIN_HAND ? citizenArmature.rightToolJoint() : citizenArmature.leftToolJoint();
-        }
-        return (Joint)this.parentJointOfHands.getOrDefault(hand, this.armature.rootJoint);
-    }
+
     @Override
     public HumanoidArmature getArmature() {
         ICitizenData data  = this.getOriginal().getCitizenData();
         ICitizenDataView dataView  = this.getOriginal().getCitizenDataView();
         HumanoidArmature childArmature = !this.getOriginal().isFemale() ? EpicColoniesArmatures.CHILD_MALE.get() : EpicColoniesArmatures.CHILD_FEMALE.get();
+
+
         if(data != null) {
             return !data.isChild() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : childArmature;
         }
@@ -312,6 +308,52 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     @Override
     protected void setWeaponMotions() {
         super.setWeaponMotions();
+
+        this.weaponLivingMotions.put(
+                CapabilityItem.WeaponCategories.SWORD, ImmutableMap.of(
+                        CapabilityItem.Styles.ONE_HAND,
+                        Set.of(
+                                Pair.of(LivingMotions.IDLE, Animations.BIPED_IDLE),
+
+                                Pair.of(LivingMotions.WALK, Animations.BIPED_WALK),
+                                Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_LONGSWORD),
+
+                                Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_LONGSWORD)
+                        ),
+                        CapabilityItem.Styles.TWO_HAND,
+                        Set.of(
+                                Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_DUAL_WEAPON),
+
+                                Pair.of(LivingMotions.WALK, Animations.BIPED_HOLD_DUAL_WEAPON),
+                                Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_DUAL_WEAPON),
+
+                                Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_DUAL)
+                        ))
+
+        );
+        this.weaponLivingMotions.put(
+                CapabilityItem.WeaponCategories.DAGGER, ImmutableMap.of(
+                        CapabilityItem.Styles.ONE_HAND,
+                        Set.of(
+                                Pair.of(LivingMotions.IDLE, Animations.BIPED_IDLE),
+
+                                Pair.of(LivingMotions.WALK, Animations.BIPED_WALK_SPEAR),
+                                Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_WALK_SPEAR),
+
+                                Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_SPEAR)
+                        ),
+                        CapabilityItem.Styles.TWO_HAND,
+                        Set.of(
+                                Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_DUAL_WEAPON),
+
+                                Pair.of(LivingMotions.WALK, Animations.BIPED_HOLD_DUAL_WEAPON),
+                                Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_DUAL_WEAPON),
+
+                                Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_DUAL)
+                        ))
+
+        );
+
         this.weaponLivingMotions.put(
                 CapabilityItem.WeaponCategories.TACHI, ImmutableMap.of(
                         CapabilityItem.Styles.TWO_HAND,
@@ -322,6 +364,58 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
                                 Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_TACHI),
 
                                 Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_SPEAR)
+                        ))
+
+        );
+        this.weaponLivingMotions.put(
+                CapabilityItem.WeaponCategories.LONGSWORD, ImmutableMap.of(
+                        CapabilityItem.Styles.TWO_HAND,
+                        Set.of(
+                                Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_LONGSWORD),
+
+                                Pair.of(LivingMotions.WALK, Animations.BIPED_WALK_LONGSWORD),
+                                Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_LONGSWORD),
+
+                                Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_LONGSWORD)
+                        ))
+
+        );
+        this.weaponLivingMotions.put(
+                CapabilityItem.WeaponCategories.SPEAR, ImmutableMap.of(
+                        CapabilityItem.Styles.COMMON,
+                        Set.of(
+                                Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_SPEAR),
+
+                                Pair.of(LivingMotions.WALK, Animations.BIPED_WALK_SPEAR),
+                                Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_SPEAR),
+
+                                Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_SPEAR)
+                        ))
+
+        );
+        this.weaponLivingMotions.put(
+                CapabilityItem.WeaponCategories.TRIDENT, ImmutableMap.of(
+                        CapabilityItem.Styles.COMMON,
+                        Set.of(
+                                Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_SPEAR),
+
+                                Pair.of(LivingMotions.WALK, Animations.BIPED_WALK_SPEAR),
+                                Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_SPEAR),
+
+                                Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_SPEAR)
+                        ))
+
+        );
+        this.weaponLivingMotions.put(
+                CapabilityItem.WeaponCategories.UCHIGATANA, ImmutableMap.of(
+                        CapabilityItem.Styles.COMMON,
+                        Set.of(
+                                Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_UCHIGATANA),
+
+                                Pair.of(LivingMotions.WALK, Animations.BIPED_HOLD_UCHIGATANA),
+                                Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_UCHIGATANA),
+
+                                Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_UCHIGATANA)
                         ))
 
         );
@@ -396,6 +490,8 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
             animator.stopPlaying(anim);
         }
     }
+
+
     public void playCompositeOptionalAnimation(){
         if (citizenPatchData.currentOptionalCompositeMotion != null) {
             AssetAccessor<? extends StaticAnimation> anim =
@@ -463,9 +559,6 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
     @Override
     protected void clientTick(LivingEvent.LivingTickEvent event) {
-        if(this.getOriginal().getMainHandItem().getItem() instanceof TachiItem) {
-            Log.info("Current Motions: " + this.getAnimator().getLivingAnimation(LivingMotions.IDLE, null));
-        }
         super.clientTick(event);
 
         onCitizenTick();
@@ -508,6 +601,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     @Override
     public void initAnimator(Animator animator) {
         // All available living motions are listed in this enum: https://github.com/Epic-Fight/epicfight/blob/1.21.1/src/main/java/yesman/epicfight/api/animation/LivingMotions.java#L4-L6
+        super.initAnimator(animator);
         animator.addLivingAnimation(LivingMotions.EAT, EpicColoniesAnimations.CITIZEN_EAT);
         animator.addLivingAnimation(LivingMotions.CLIMB, EpicColoniesAnimations.CITIZEN_CLIMB);
         animator.addLivingAnimation(LivingMotions.DIGGING, EpicColoniesAnimations.CITIZEN_DIG);

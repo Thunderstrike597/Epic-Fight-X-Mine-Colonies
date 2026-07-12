@@ -13,6 +13,7 @@ import net.minecraftforge.network.NetworkEvent;
 import org.jline.utils.Log;
 import yesman.epicfight.api.animation.AnimationManager;
 import yesman.epicfight.api.animation.LivingMotion;
+import yesman.epicfight.api.animation.LivingMotions;
 import yesman.epicfight.api.animation.types.StaticAnimation;
 import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.animation.ClientAnimator;
@@ -119,14 +120,17 @@ public class ChangeLivingMotion {
                     animator.resetMotion(false);
                     animator.resetCompositeMotion();
 
-                    for(int i = 0; i < msg.count; ++i) {
-                        Log.info("Setting Living Motion: " + msg.animationList.get(i));
-                        livingEntityPatch.getClientAnimator().addLivingAnimation((LivingMotion)msg.motionList.get(i), msg.animationList.get(i));
+                    for (int i = 0; i < msg.count; ++i) {
+
+                        LivingMotion decoded = msg.motionList.get(i);
+                            livingEntityPatch.getClientAnimator().addLivingAnimation(decoded, msg.animationList.get(i));
                     }
 
                     if (msg.setChangesAsDefault) {
                         animator.setCurrentMotionsAsDefault();
                     }
+                    Log.info("Setting Living Motion [POST]: " + livingEntityPatch.getClientAnimator().getCompositeLivingMotion(LivingMotions.IDLE));
+
                 }
             }
 
