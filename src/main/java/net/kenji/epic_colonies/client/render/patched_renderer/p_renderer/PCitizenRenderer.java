@@ -9,6 +9,7 @@ import com.minecolonies.api.colony.jobs.registry.JobEntry;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.core.client.render.CitizenArmorLayer;
 import com.minecolonies.core.client.render.RenderBipedCitizen;
+import com.minecolonies.core.colony.jobs.AbstractJobCrafter;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.kenji.epic_colonies.EpicColonies;
 import net.kenji.epic_colonies.api.data.CitizenMeshCache;
@@ -130,6 +131,9 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
         if (mesh.hat != null) {
             mesh.hat.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.HEAD));
         }
+        if (mesh.breast != null) {
+            mesh.breast.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.CHEST));
+        }
         if (mesh.jacket != null) {
             mesh.jacket.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.CHEST));
         }
@@ -139,8 +143,8 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
         if (mesh.rightSleeve != null) {
             mesh.rightSleeve.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.CHEST));
         }
-        if (mesh.breast != null) {
-            mesh.breast.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.CHEST));
+        if (mesh.pants != null) {
+            mesh.pants.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.LEGS));
         }
         if (mesh.leftPants != null) {
             mesh.leftPants.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.LEGS));
@@ -149,6 +153,7 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
             mesh.rightPants.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.LEGS));
         }
     }
+
     @Override
     protected void renderLayer(LivingEntityRenderer<AbstractEntityCitizen, CitizenModel<AbstractEntityCitizen>> renderer, CitizenEntityPatch<AbstractEntityCitizen> entitypatch, AbstractEntityCitizen entity, OpenMatrix4f[] poses, MultiBufferSource buffer, PoseStack poseStack, int packedLight, float partialTicks) {
         super.renderLayer(renderer, entitypatch, entity, poses, buffer, poseStack, packedLight, partialTicks);

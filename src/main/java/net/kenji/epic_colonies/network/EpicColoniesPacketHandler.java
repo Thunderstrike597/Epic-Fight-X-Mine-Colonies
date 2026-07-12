@@ -31,6 +31,11 @@ public class EpicColoniesPacketHandler {
                 .encoder(ClientCitizenSyncPacket::encode)
                 .consumerMainThread(ClientCitizenSyncPacket::handle)
                 .add();
+        INSTANCE.messageBuilder(ChangeLivingMotion.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(ChangeLivingMotion::fromBytes)
+                .encoder(ChangeLivingMotion::toBytes)
+                .consumerMainThread(ChangeLivingMotion::handle)
+                .add();
     }
 
     // Helper method to send packet to server

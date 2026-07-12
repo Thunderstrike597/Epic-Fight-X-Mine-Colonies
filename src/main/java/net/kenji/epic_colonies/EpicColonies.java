@@ -8,6 +8,7 @@ import net.kenji.epic_colonies.client.events.EpicFightClientEvents;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
 import net.kenji.epic_colonies.events.ModEvents;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
+import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
 import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.Registries;
@@ -38,6 +39,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.slf4j.Logger;
+import yesman.epicfight.api.animation.LivingMotions;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -59,6 +61,7 @@ public class EpicColonies {
         modEventBus.addListener(ModEvents::commonSetup);
         modEventBus.addListener(this::commonSetup);
         // Register ourselves for server and other game events we are interested in
+        LivingMotions.ENUM_MANAGER.registerEnumCls(MODID, EpicColoniesLivingMotions.class);
         MinecraftForge.EVENT_BUS.register(this);
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modEventBus.addListener(EpicFightClientEvents::registerPatchedEntityRenderers);        }

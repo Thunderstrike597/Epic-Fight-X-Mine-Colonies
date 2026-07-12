@@ -1,6 +1,7 @@
 package net.kenji.epic_colonies.gameasset.patch;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.ICitizenDataView;
 import com.minecolonies.api.colony.jobs.IJob;
@@ -27,6 +28,7 @@ import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
 import net.kenji.epic_colonies.gameasset.armatures.CitizenArmature;
 import net.kenji.epic_colonies.mixins.LivingEntityAccessor;
+import net.kenji.epic_colonies.network.ChangeLivingMotion;
 import net.kenji.epic_colonies.network.ClientCitizenSyncPacket;
 import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -39,10 +41,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.CrossbowItem;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.ProjectileWeaponItem;
-import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.item.*;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -53,17 +52,21 @@ import yesman.epicfight.api.animation.types.DynamicAnimation;
 import yesman.epicfight.api.animation.types.SelectiveAnimation;
 import yesman.epicfight.api.animation.types.StaticAnimation;
 import yesman.epicfight.api.asset.AssetAccessor;
+import yesman.epicfight.api.client.animation.ClientAnimator;
 import yesman.epicfight.api.client.animation.Layer;
 import yesman.epicfight.client.world.capabilites.entitypatch.player.AbstractClientPlayerPatch;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.gameasset.MobCombatBehaviors;
 import yesman.epicfight.model.armature.HumanoidArmature;
+import yesman.epicfight.network.EpicFightNetworkManager;
+import yesman.epicfight.network.server.SPChangeLivingMotion;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
 import yesman.epicfight.world.capabilities.entitypatch.mob.SkeletonPatch;
 import yesman.epicfight.world.capabilities.entitypatch.mob.WitherSkeletonPatch;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
+import yesman.epicfight.world.capabilities.item.Style;
 import yesman.epicfight.world.capabilities.item.WeaponCategory;
 import yesman.epicfight.world.entity.ai.goal.AnimatedAttackGoal;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
@@ -71,10 +74,7 @@ import yesman.epicfight.world.entity.ai.goal.TargetChasingGoal;
 import yesman.epicfight.world.item.*;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends HumanoidMobPatch<AbstractEntityCitizen> {
     public boolean shouldRun = false;
@@ -94,6 +94,8 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
     public boolean didJump = false;
 
+    private WeaponCategory lastWeaponCategory = null;
+    private Style lastStyle = null;
     public static int MAX_BLINK_COUNTER = 20 * 20;
     public int blinkCounter = 0;
     @Override
@@ -199,7 +201,6 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     public void serverTick(LivingEvent.LivingTickEvent event) {
         super.serverTick(event); // already dispatches to clientTick()/serverTick() internally, including onCitizenTick() on the client
         onCitizenTick(); // only need to run it here for the server, since clientTick() already covers the client path
-
     }
 
 
@@ -305,44 +306,82 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         else super.commonMobUpdateMotion(considerInaction);
     }
 
+
+
+
     @Override
-    protected CombatBehaviors.Builder<HumanoidMobPatch<?>> getHoldingItemWeaponMotionBuilder() {
-        CapabilityItem mainHandCap = EpicFightCapabilities.getItemStackCapability(this.getOriginal().getMainHandItem());
-        if (mainHandCap == null) return MobCombatBehaviors.HUMANOID_FIST;
-        WeaponCategory category = mainHandCap.getWeaponCategory();
-        if (category == CapabilityItem.WeaponCategories.SWORD) {
-            return MobCombatBehaviors.SKELETON_SWORD;
-        }
-        if (this.getOriginal().getMainHandItem().getItem() instanceof SpearItem || category == CapabilityItem.WeaponCategories.SPEAR) {
-            if (this.getOriginal().getOffhandItem().isEmpty())
-                return MobCombatBehaviors.HUMANOID_SPEAR_TWOHAND;
-            return MobCombatBehaviors.HUMANOID_SPEAR_ONEHAND;
-        }
-        if (this.getOriginal().getMainHandItem().getItem() instanceof DaggerItem || category == CapabilityItem.WeaponCategories.DAGGER) {
-            if (this.getOriginal().getOffhandItem().getItem() instanceof DaggerItem || category == CapabilityItem.WeaponCategories.DAGGER)
-                return MobCombatBehaviors.HUMANOID_TWOHAND_DAGGER;
-            return MobCombatBehaviors.HUMANOID_ONEHAND_DAGGER;
-        }
-        if (this.getOriginal().getMainHandItem().getItem() instanceof LongswordItem || category == CapabilityItem.WeaponCategories.LONGSWORD) {
-                return MobCombatBehaviors.HUMANOID_LONGSWORD;
-        }
-        if (this.getOriginal().getMainHandItem().getItem() instanceof TachiItem || category == CapabilityItem.WeaponCategories.TACHI) {
-            return MobCombatBehaviors.HUMANOID_TACHI;
-        }
-        if (this.getOriginal().getMainHandItem().getItem() instanceof GreatswordItem || category == CapabilityItem.WeaponCategories.GREATSWORD) {
-            return MobCombatBehaviors.HUMANOID_GREATSWORD;
-        }
-
-        return super.getHoldingItemWeaponMotionBuilder();
-    }
-
     protected void setWeaponMotions() {
         super.setWeaponMotions();
-        this.weaponLivingMotions.put(CapabilityItem.WeaponCategories.SWORD, ImmutableMap.of(CapabilityItem.Styles.ONE_HAND, Set.of(Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN), Pair.of(EpicColoniesLivingMotions.JOG, EpicColoniesAnimations.CITIZEN_JOG), Pair.of(LivingMotions.WALK, EpicColoniesAnimations.CITIZEN_WALK), Pair.of(LivingMotions.IDLE, Animations.BIPED_IDLE))));
-        this.weaponLivingMotions.put(CapabilityItem.WeaponCategories.TACHI, ImmutableMap.of(CapabilityItem.Styles.ONE_HAND, Set.of(Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_SPEAR), Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_TACHI), Pair.of(LivingMotions.WALK, Animations.BIPED_HOLD_TACHI), Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_TACHI))));
-        this.weaponLivingMotions.put(CapabilityItem.WeaponCategories.LONGSWORD, ImmutableMap.of(CapabilityItem.Styles.COMMON, Set.of(Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_LONGSWORD), Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_LONGSWORD), Pair.of(LivingMotions.WALK, Animations.BIPED_HOLD_LONGSWORD), Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_LONGSWORD))));
-        this.weaponLivingMotions.put(CapabilityItem.WeaponCategories.GREATSWORD, ImmutableMap.of(CapabilityItem.Styles.COMMON, Set.of(Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_GREATSWORD), Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_GREATSWORD), Pair.of(LivingMotions.WALK, Animations.BIPED_HOLD_GREATSWORD), Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_GREATSWORD))));
+        this.weaponLivingMotions.put(
+                CapabilityItem.WeaponCategories.TACHI, ImmutableMap.of(
+                        CapabilityItem.Styles.TWO_HAND,
+                        Set.of(
+                                Pair.of(LivingMotions.IDLE, Animations.BIPED_HOLD_TACHI),
+
+                                Pair.of(LivingMotions.WALK, Animations.BIPED_HOLD_TACHI),
+                                Pair.of(EpicColoniesLivingMotions.JOG, Animations.BIPED_HOLD_TACHI),
+
+                                Pair.of(LivingMotions.CHASE, Animations.BIPED_RUN_SPEAR)
+                        ))
+
+        );
+
     }
+
+
+    @Override
+    public void modifyLivingMotionByCurrentItem(boolean onStartTracking){
+            Map<LivingMotion, AssetAccessor<? extends StaticAnimation>> oldLivingAnimations = this.getAnimator().getLivingAnimations();
+            Map<LivingMotion, AssetAccessor<? extends StaticAnimation>> newLivingAnimations = Maps.newHashMap();
+            CapabilityItem mainhandCap = this.getHoldingItemCapability(InteractionHand.MAIN_HAND);
+            CapabilityItem offhandCap = this.getAdvancedHoldingItemCapability(InteractionHand.OFF_HAND);
+            Map<LivingMotion, AssetAccessor<? extends StaticAnimation>> livingMotionModifiers = new HashMap(mainhandCap.getLivingMotionModifier(this, InteractionHand.MAIN_HAND));
+            livingMotionModifiers.putAll(offhandCap.getLivingMotionModifier(this, InteractionHand.OFF_HAND));
+            boolean hasChange = false;
+
+            for(Map.Entry<LivingMotion, AssetAccessor<? extends StaticAnimation>> entry : livingMotionModifiers.entrySet()) {
+                AssetAccessor<? extends StaticAnimation> aniamtion = (AssetAccessor)entry.getValue();
+                if (!oldLivingAnimations.containsKey(entry.getKey())) {
+                    hasChange = true;
+                } else if (oldLivingAnimations.get(entry.getKey()) != aniamtion) {
+                    hasChange = true;
+                }
+
+                newLivingAnimations.put((LivingMotion)entry.getKey(), aniamtion);
+            }
+
+            if (this.weaponLivingMotions != null && this.weaponLivingMotions.containsKey(mainhandCap.getWeaponCategory())) {
+
+                Map<Style, Set<Pair<LivingMotion, AnimationManager.AnimationAccessor<? extends StaticAnimation>>>> byStyle = (Map)this.weaponLivingMotions.get(mainhandCap.getWeaponCategory());
+                Style style = mainhandCap.getStyle(this);
+                if (byStyle.containsKey(style) || byStyle.containsKey(CapabilityItem.Styles.COMMON)) {
+
+                    for(Pair<LivingMotion, AnimationManager.AnimationAccessor<? extends StaticAnimation>> pair : byStyle.getOrDefault(style, byStyle.get(CapabilityItem.Styles.COMMON))) {
+                        newLivingAnimations.put((LivingMotion)pair.getFirst(), (AssetAccessor)pair.getSecond());
+                    }
+                }
+            }
+
+            if (!hasChange) {
+                for(LivingMotion oldLivingMotion : oldLivingAnimations.keySet()) {
+                    if (!newLivingAnimations.containsKey(oldLivingMotion)) {
+                        hasChange = true;
+                        break;
+                    }
+                }
+            }
+
+            if (hasChange || onStartTracking) {
+                this.getAnimator().resetLivingAnimations();
+                Animator var10001 = this.getAnimator();
+                Objects.requireNonNull(var10001);
+                newLivingAnimations.forEach(var10001::addLivingAnimation);
+                ChangeLivingMotion msg = new ChangeLivingMotion(((PathfinderMob)this.original).getId());
+                msg.putEntries(newLivingAnimations.entrySet());
+                EpicColoniesPacketHandler.sendToAll(msg);
+            }
+    }
+
     public void playCompositeOnLayer(AnimationManager.AnimationAccessor<? extends StaticAnimation> anim, Layer.Priority layerPriority){
         AnimationPlayer animPlayer = this.getClientAnimator().getCompositeLayer(layerPriority).animationPlayer;
 
@@ -421,10 +460,13 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         // Scale between your known good minimum and maximum playback speed
         return (float)(minSpeed + normalized * (maxSpeed - minSpeed));
     }
+
     @Override
     protected void clientTick(LivingEvent.LivingTickEvent event) {
+        if(this.getOriginal().getMainHandItem().getItem() instanceof TachiItem) {
+            Log.info("Current Motions: " + this.getAnimator().getLivingAnimation(LivingMotions.IDLE, null));
+        }
         super.clientTick(event);
-        LivingMotion motionBeforeThisTick = citizenPatchData.prevOptionalMotion;
 
         onCitizenTick();
 
@@ -462,10 +504,10 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         }
     }
 
+
     @Override
     public void initAnimator(Animator animator) {
         // All available living motions are listed in this enum: https://github.com/Epic-Fight/epicfight/blob/1.21.1/src/main/java/yesman/epicfight/api/animation/LivingMotions.java#L4-L6
-
         animator.addLivingAnimation(LivingMotions.EAT, EpicColoniesAnimations.CITIZEN_EAT);
         animator.addLivingAnimation(LivingMotions.CLIMB, EpicColoniesAnimations.CITIZEN_CLIMB);
         animator.addLivingAnimation(LivingMotions.DIGGING, EpicColoniesAnimations.CITIZEN_DIG);
