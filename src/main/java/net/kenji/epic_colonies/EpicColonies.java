@@ -1,46 +1,30 @@
 package net.kenji.epic_colonies;
 
-import com.minecolonies.api.client.render.modeltype.CitizenModel;
-import com.minecolonies.core.client.model.FemaleCitizenModel;
-import com.minecolonies.core.client.model.MaleCitizenModel;
 import com.mojang.logging.LogUtils;
+
 import net.kenji.epic_colonies.client.events.EpicFightClientEvents;
-import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
+import net.kenji.epic_colonies.compat.CompatMobCombatBehaviours;
+import net.kenji.epic_colonies.compat.cd_moveset.CdMovesetCombatBehaviours;
+import net.kenji.epic_colonies.compat.wom.WomCombatBehaviours;
 import net.kenji.epic_colonies.events.ModEvents;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
 import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.world.food.FoodProperties;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
 import org.slf4j.Logger;
 import yesman.epicfight.api.animation.LivingMotions;
-import yesman.epicfight.world.capabilities.item.CapabilityItem;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(EpicColonies.MODID)
@@ -68,6 +52,18 @@ public class EpicColonies {
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, EpicColoniesConfigClient.SPEC, "EpicColonies-Client.toml");
 
+
+    }
+
+    public static void initWeaponMotions(){
+        CompatMobCombatBehaviours.initEpicFightWeaponMotions();
+
+        if(ModList.get().isLoaded("wom")){
+            WomCombatBehaviours.init();
+        }
+        if(ModList.get().isLoaded("cdmoveset")){
+            CdMovesetCombatBehaviours.init();
+        }
 
     }
 

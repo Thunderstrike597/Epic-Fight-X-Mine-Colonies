@@ -44,6 +44,8 @@ public class ModEvents {
     @SubscribeEvent
     public static void loadComplete(FMLLoadCompleteEvent event) {
         event.enqueueWork(EpicColoniesMeshes::buildJobMeshMaps);
+        event.enqueueWork(EpicColonies::initWeaponMotions);
+
     }
     @SubscribeEvent
     public static void existingEntityAttributes(EntityAttributeModificationEvent event){

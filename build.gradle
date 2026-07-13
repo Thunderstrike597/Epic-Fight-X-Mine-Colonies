@@ -181,8 +181,11 @@ dependencies {
     implementation fg.deobf("curse.maven:towntalk-900364:5355511")
 
     implementation fg.deobf("curse.maven:minecolonies-245506:7425051")
-    implementation fg.deobf("curse.maven:epic-fight-mod-405076:8049910")
 
+    implementation fg.deobf("curse.maven:epic-fight-mod-405076:8049910")
+    implementation fg.deobf("curse.maven:epicfight-resurrection-1151542:6931390")
+    implementation fg.deobf("curse.maven:epicfight-resurrection-crash-fix-1520550:8086417")
+    implementation fg.deobf("curse.maven:weapons-of-miracles-epicfight-918614:7517612")
 
 
     compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"))
