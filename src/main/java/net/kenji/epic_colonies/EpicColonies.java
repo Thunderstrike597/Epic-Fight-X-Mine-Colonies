@@ -1,5 +1,6 @@
 package net.kenji.epic_colonies;
 
+import com.minecolonies.core.client.model.MaleForesterModel;
 import com.mojang.logging.LogUtils;
 
 import net.kenji.epic_colonies.client.events.EpicFightClientEvents;
