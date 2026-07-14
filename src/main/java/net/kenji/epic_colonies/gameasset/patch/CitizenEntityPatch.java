@@ -17,6 +17,8 @@ import com.mojang.datafixers.util.Pair;
 import net.corruptdog.cdm.world.item.CDAddonItems;
 import net.kenji.epic_colonies.api.CitizenPatchData;
 import net.kenji.epic_colonies.api.data.CitizenMeshCache;
+import net.kenji.epic_colonies.client.meshes.EpicColoniesMesh;
+import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
 import net.kenji.epic_colonies.compat.CompatMobCombatBehaviours;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
@@ -36,11 +38,13 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import org.jline.utils.Log;
 import yesman.epicfight.api.animation.*;
 import yesman.epicfight.api.animation.types.DynamicAnimation;
 import yesman.epicfight.api.animation.types.StaticAnimation;
 import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.animation.Layer;
+import yesman.epicfight.api.client.model.Meshes;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.model.armature.HumanoidArmature;
 import yesman.epicfight.world.capabilities.entitypatch.Factions;
@@ -80,6 +84,21 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         return true;
     }
 
+
+    public static AssetAccessor<EpicColoniesMesh> getMeshFromTexture(AbstractEntityCitizen citizen, boolean isChild){
+
+        if(isChild) {
+            if (EpicColoniesMeshes.bigEyeTextures.contains(citizen.getTexture())) {
+                if (citizen.isFemale())
+                    return EpicColoniesMeshes.CHILD_FEMALE_BIG_EYES;
+            }
+            if (EpicColoniesMeshes.lowerEyeTextures.contains(citizen.getTexture())) {
+                if (citizen.isFemale())
+                    return EpicColoniesMeshes.CHILD_FEMALE_LOWER_EYES;
+            }
+        }
+        return null;
+    }
 
 
     @Override
@@ -130,6 +149,17 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
 
         if(data != null) {
+            AssetAccessor<EpicColoniesMesh> finalChildMesh = getMeshFromTexture(this.getOriginal(), data.isChild());
+            if(finalChildMesh != null){
+                if(finalChildMesh == EpicColoniesMeshes.CHILD_FEMALE_BIG_EYES){
+                    childArmature = EpicColoniesArmatures.CHILD_FEMALE_BIG_EYES.get();
+                }
+                else if(finalChildMesh == EpicColoniesMeshes.CHILD_FEMALE_LOWER_EYES){
+                    childArmature = EpicColoniesArmatures.CHILD_FEMALE_LOWER_EYES.get();
+                }
+
+            }
+
             return !data.isChild() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : childArmature;
         }
         if(dataView != null){

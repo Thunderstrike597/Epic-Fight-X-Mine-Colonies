@@ -125,8 +125,6 @@ public class CitizenDetailsLayer<E extends AbstractEntityCitizen, T extends Livi
             mesh.leftLeg.setHidden(true);
 
         ResourceLocation tex = entityliving.getTexture();
-        if(entityliving.getCivilianID() == 2)
-            Log.info("Texture: " + tex);
 
         mesh.draw(poseStack, buffer, RenderType.entityCutoutNoCull(tex),
                 packedLight, 1.0F, 1.0F, 1.0F, 1.0F, LivingEntityRenderer.getOverlayCoords(entityliving, 0.0F),

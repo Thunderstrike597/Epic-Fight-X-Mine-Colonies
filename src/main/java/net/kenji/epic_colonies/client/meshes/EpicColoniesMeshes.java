@@ -1,5 +1,9 @@
 package net.kenji.epic_colonies.client.meshes;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.minecolonies.api.colony.jobs.ModJobs;
 import com.minecolonies.api.colony.jobs.registry.JobEntry;
 import com.minecolonies.api.entity.ModEntities;
@@ -7,12 +11,21 @@ import com.minecolonies.core.client.model.FemaleNobleModle;
 import com.minecolonies.core.client.model.MercenaryModel;
 import com.minecolonies.core.colony.buildings.modules.CourierAssignmentModule;
 import net.kenji.epic_colonies.EpicColonies;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.profiling.ProfilerFiller;
+import org.jline.utils.Log;
 import yesman.epicfight.api.client.model.Meshes;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -20,6 +33,8 @@ import java.util.concurrent.Executor;
 public class EpicColoniesMeshes implements PreparableReloadListener {
     public static Map<JobEntry, Meshes.MeshAccessor<EpicColoniesMesh>> jobMeshMapMale = new HashMap<>();
     public static Map<JobEntry, Meshes.MeshAccessor<EpicColoniesMesh>> jobMeshMapFemale = new HashMap<>();
+    public static List<ResourceLocation> bigEyeTextures = new ArrayList<>();
+    public static List<ResourceLocation> lowerEyeTextures = new ArrayList<>();
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> DEFAULT_MALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> CITIZEN_MALE;
@@ -77,6 +92,8 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> CITIZEN_FEMALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> CHILD_FEMALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> CHILD_FEMALE_BIG_EYES;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> CHILD_FEMALE_LOWER_EYES;
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> COURIER_FEMALE;
 
@@ -194,6 +211,9 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
         DEFAULT_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/default_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         CITIZEN_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/citizen_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         CHILD_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/child_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        CHILD_FEMALE_BIG_EYES = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/child_female_big_eyes", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        CHILD_FEMALE_LOWER_EYES = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/child_female_eyes_lower", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+
         COURIER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/courier_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         BUILDER_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/builder_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         KNIGHT_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/knight_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
@@ -347,9 +367,35 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
         jobMeshMapFemale.put(ModJobs.student.get(), STUDENT_FEMALE);
         jobMeshMapFemale.put(ModJobs.undertaker.get(), UNDERTAKER_FEMALE);
         /// ARISTOCRAT MISSING FOR NOW
-
+        bigEyeTextures = getTexturesFromJson("child_bigeyes");
+        lowerEyeTextures = getTexturesFromJson("child_lowereyes");
     }
+    public static List<ResourceLocation> getTexturesFromJson(String fileName) {
+        List<ResourceLocation> locations = new ArrayList<>();
+        String path = "data/" + EpicColonies.MODID + "/texture_data/" + fileName + ".json";
 
+        try (InputStream is = EpicColonies.class.getClassLoader().getResourceAsStream(path)) {
+            if (is == null) {
+                throw new RuntimeException("Could not find texture data file: " + path);
+            }
+
+            try (InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+                JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+                JsonArray textures = json.getAsJsonArray("valid_textures");
+
+                for (JsonElement element : textures) {
+                    String texturePath = element.getAsJsonObject().get("texture").getAsString();
+                    locations.add(ResourceLocation.fromNamespaceAndPath(
+                            "minecolonies", "textures/entity/citizen/" + texturePath
+                    ));
+                }
+            }
+        } catch (IOException e) {
+            EpicColonies.LOGGER.error("Failed to load texture data: {}", path, e);
+        }
+
+        return locations;
+    }
     @Override
     public CompletableFuture<Void> reload(PreparationBarrier preparationBarrier, ResourceManager resourceManager, ProfilerFiller profilerFiller, ProfilerFiller profilerFiller1, Executor executor, Executor executor1) {
         return null;

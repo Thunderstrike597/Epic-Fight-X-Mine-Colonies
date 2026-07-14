@@ -82,8 +82,9 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
                 isChild = view.isChild();
                 if (!isChild) {
                     IJobView jobView = view.getJobView();
-                    if (jobView != null) jobEntry = jobView.getEntry();
-                }else return childMesh;
+                    if (jobView != null)
+                        jobEntry = jobView.getEntry();
+                }
             }
         } else {
             ICitizenData data = citizen.getCitizenData();
@@ -122,9 +123,13 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
                 dataAvailable = true;
             }
         }
-
-        if (dataAvailable && isChild) {
-            return childMesh;
+        if(dataAvailable) {
+            if (CitizenEntityPatch.getMeshFromTexture(citizen, isChild) != null) {
+                return CitizenEntityPatch.getMeshFromTexture(citizen, isChild);
+            }
+            if (isChild) {
+                return childMesh;
+            }
         }
 
 
@@ -174,4 +179,7 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
     public AssetAccessor<EpicColoniesMesh> getDefaultMesh() {
         return EpicColoniesMeshes.DEFAULT_MALE;
     }
+
+
+
 }

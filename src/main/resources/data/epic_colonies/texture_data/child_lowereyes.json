@@ -1,0 +1,25 @@
+{
+  "valid_textures": [
+    {
+      "texture": "default/childfemale2_a.png"
+    },
+    {
+      "texture": "default/childfemale2_b.png"
+    },
+    {
+      "texture": "default/childfemale2_d.png"
+    },
+    {
+      "texture": "default/childfemale2_w.png"
+    },
+    {
+      "texture": "default/childfemale3_a.png"
+    },
+
+    {
+      "texture": "default/childfemale3_w.png"
+    }
+  ]
+
+
+}

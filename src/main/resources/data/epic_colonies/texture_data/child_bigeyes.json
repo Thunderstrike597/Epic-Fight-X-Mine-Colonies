@@ -1,0 +1,15 @@
+{
+  "valid_textures": [
+    {
+      "texture": "default/childfemale1_a.png"
+    },
+    {
+      "texture": "default/childfemale1_b.png"
+    },
+    {
+      "texture": "default/childfemale1_w.png"
+    }
+  ]
+
+
+}
