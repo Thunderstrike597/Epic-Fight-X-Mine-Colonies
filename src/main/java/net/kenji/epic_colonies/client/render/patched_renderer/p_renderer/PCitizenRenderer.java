@@ -5,16 +5,19 @@ import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.ICitizenDataView;
 import com.minecolonies.api.colony.jobs.IJob;
 import com.minecolonies.api.colony.jobs.IJobView;
+import com.minecolonies.api.colony.jobs.ModJobs;
 import com.minecolonies.api.colony.jobs.registry.JobEntry;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.core.client.render.CitizenArmorLayer;
 import com.minecolonies.core.client.render.RenderBipedCitizen;
 import com.minecolonies.core.colony.jobs.AbstractJobCrafter;
+import com.minecolonies.core.colony.jobs.JobMechanic;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.kenji.epic_colonies.EpicColonies;
 import net.kenji.epic_colonies.api.data.CitizenMeshCache;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMesh;
+import net.kenji.epic_colonies.client.patched_layers.CitizenDetailsLayer;
 import net.kenji.epic_colonies.client.patched_layers.CitizenWearableItemLayer;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
 import net.minecraft.client.Minecraft;
@@ -35,13 +38,14 @@ import yesman.epicfight.client.renderer.patched.entity.PatchedLivingEntityRender
 import yesman.epicfight.client.renderer.patched.layer.PatchedItemInHandLayer;
 import yesman.epicfight.client.renderer.patched.layer.WearableItemLayer;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 
 public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntityCitizen, CitizenEntityPatch<AbstractEntityCitizen>, CitizenModel<AbstractEntityCitizen>, RenderBipedCitizen, EpicColoniesMesh> {
     public PCitizenRenderer(Meshes.MeshAccessor<EpicColoniesMesh> mesh, EntityRendererProvider.Context context, EntityType<?> entityType) {
         super(context, entityType);
         this.addPatchedLayer(ItemInHandLayer.class, new PatchedItemInHandLayer<>());
+        this.addCustomLayer(new CitizenDetailsLayer<>(getDefaultMesh(), EpicColoniesMeshes.jobMeshMapMale, EpicColoniesMeshes.jobMeshMapFemale, context.getModelManager()));
+
         this.addPatchedLayer(CitizenArmorLayer.class, new CitizenWearableItemLayer<>(mesh, false, context.getModelManager()));
     }
 
@@ -56,6 +60,8 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
             return EpicColoniesMeshes.CITIZEN_MALE; // safe fallback so at least *something* renders
         }
     }
+
+
 
 
 
@@ -85,7 +91,8 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
                 dataAvailable = true;
                 isChild = data.isChild();
                 IJob<?> job = data.getJob();
-                if (job != null) jobEntry = job.getJobRegistryEntry();
+                if (job != null)
+                    jobEntry = job.getJobRegistryEntry();
 
             }
         }
@@ -120,7 +127,8 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
             return childMesh;
         }
 
-        return jobEntry == null ? citizenMesh : meshMap.getOrDefault(jobEntry, defaultMesh);
+
+        return defaultMesh;
     }
 
 
@@ -152,6 +160,9 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
         if (mesh.rightPants != null) {
             mesh.rightPants.setHidden(CitizenWearableItemLayer.shouldHidePart(entity, EquipmentSlot.LEGS));
         }
+        if(mesh.featuresOn != null){
+            mesh.featuresOn.setHidden(true);
+        }
     }
 
     @Override
@@ -161,6 +172,6 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
     }
 
     public AssetAccessor<EpicColoniesMesh> getDefaultMesh() {
-        return EpicColoniesMeshes.CITIZEN_MALE;
+        return EpicColoniesMeshes.DEFAULT_MALE;
     }
 }

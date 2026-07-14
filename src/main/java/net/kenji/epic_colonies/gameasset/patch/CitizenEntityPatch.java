@@ -5,6 +5,8 @@ import com.google.common.collect.Maps;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.ICitizenDataView;
 import com.minecolonies.api.colony.jobs.IJob;
+import com.minecolonies.api.colony.jobs.IJobView;
+import com.minecolonies.api.colony.jobs.registry.JobEntry;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.core.entity.ai.minimal.EntityAICitizenAvoidEntity;
@@ -174,6 +176,18 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         onCitizenTick(); // only need to run it here for the server, since clientTick() already covers the client path
     }
 
+    public JobEntry getJobEntryFromDataView(){
+        AbstractEntityCitizen citizen = this.getOriginal();
+        if (citizen.level().isClientSide()) {
+            ICitizenDataView view = citizen.getCitizenDataView();
+            if (view != null) {
+                IJobView jobView = view.getJobView();
+                if (jobView != null)
+                    return jobView.getEntry();
+            }
+        }
+        return null;
+    }
 
     protected void setSleepDir(){
         Direction bedDir = this.getOriginal().getBedOrientation();
