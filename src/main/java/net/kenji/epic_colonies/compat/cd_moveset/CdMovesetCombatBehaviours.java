@@ -31,13 +31,13 @@ public class CdMovesetCombatBehaviours {
 
         CompatMobCombatBehaviours.HUMANOID_S_SWORD = CompatMobCombatBehaviours.register(
                 CapabilityItem.WeaponCategories.SWORD,
-                CompatMobCombatBehaviours.motion(CapabilityItem.Styles.ONE_HAND, swordSBehaviour, Animations.BIPED_IDLE, Animations.BIPED_WALK, Animations.BIPED_RUN),
+                CompatMobCombatBehaviours.motion(CapabilityItem.Styles.ONE_HAND, swordSBehaviour, Animations.BIPED_HOLD_LONGSWORD, Animations.BIPED_WALK, Animations.BIPED_RUN),
                 CompatMobCombatBehaviours.motion(CapabilityItem.Styles.TWO_HAND, MobCombatBehaviors.HUMANOID_DUAL_SWORD, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_RUN_DUAL)
         );
 
         CompatMobCombatBehaviours.HUMANOID_S_DAGGER = CompatMobCombatBehaviours.register(
                 CapabilityItem.WeaponCategories.DAGGER,
-                CompatMobCombatBehaviours.motion(CapabilityItem.Styles.ONE_HAND, MobCombatBehaviors.HUMANOID_ONEHAND_DAGGER, Animations.BIPED_IDLE, Animations.BIPED_WALK, Animations.BIPED_RUN),
+                CompatMobCombatBehaviours.motion(CapabilityItem.Styles.ONE_HAND, MobCombatBehaviors.HUMANOID_ONEHAND_DAGGER, Animations.BIPED_IDLE, Animations.BIPED_WALK, Animations.BIPED_HOLD_SPEAR, Animations.BIPED_RUN),
                 CompatMobCombatBehaviours.motion(CapabilityItem.Styles.TWO_HAND, daggerDualSBehaviour, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_RUN_DUAL)
                 );
         CompatMobCombatBehaviours.HUMANOID_S_TACHI = CompatMobCombatBehaviours.register(
@@ -46,7 +46,7 @@ public class CdMovesetCombatBehaviours {
         );
         CompatMobCombatBehaviours.HUMANOID_S_LONGSWORD = CompatMobCombatBehaviours.register(
                 CapabilityItem.WeaponCategories.LONGSWORD,
-                CompatMobCombatBehaviours.motion(CapabilityItem.Styles.TWO_HAND, longswordSBehaviour, Animations.BIPED_HOLD_LONGSWORD, Animations.BIPED_WALK_LONGSWORD, Animations.BIPED_RUN_LONGSWORD)
+                CompatMobCombatBehaviours.motion(CapabilityItem.Styles.TWO_HAND, longswordSBehaviour, Animations.BIPED_HOLD_LONGSWORD, Animations.BIPED_WALK_LONGSWORD, Animations.BIPED_HOLD_SPEAR, Animations.BIPED_RUN_LONGSWORD)
         );
         CompatMobCombatBehaviours.HUMANOID_S_SPEAR = CompatMobCombatBehaviours.register(
                 CapabilityItem.WeaponCategories.SPEAR,

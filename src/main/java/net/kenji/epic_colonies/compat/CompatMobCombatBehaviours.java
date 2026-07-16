@@ -45,6 +45,7 @@ public class CompatMobCombatBehaviours {
 
     public record WeaponMotions(Style style, CombatBehaviors.Builder<HumanoidMobPatch<?>> behaviour , AnimationManager.AnimationAccessor<? extends StaticAnimation> idleMotion,
                                 AnimationManager.AnimationAccessor<? extends StaticAnimation> walkMotion,
+                                AnimationManager.AnimationAccessor<? extends StaticAnimation> jogMotion,
                                 AnimationManager.AnimationAccessor<? extends StaticAnimation> runMotion) {
 
     }
@@ -57,7 +58,14 @@ public class CompatMobCombatBehaviours {
                                         AnimationManager.AnimationAccessor<? extends StaticAnimation> idle,
                                         AnimationManager.AnimationAccessor<? extends StaticAnimation> walk,
                                         AnimationManager.AnimationAccessor<? extends StaticAnimation> run) {
-        return new WeaponMotions(style, behaviour,idle, walk, run);
+        return new WeaponMotions(style, behaviour, idle, walk, idle, run);
+    }
+    public static WeaponMotions motion(Style style, CombatBehaviors.Builder<HumanoidMobPatch<?>> behaviour,
+                                       AnimationManager.AnimationAccessor<? extends StaticAnimation> idle,
+                                       AnimationManager.AnimationAccessor<? extends StaticAnimation> walk,
+                                       AnimationManager.AnimationAccessor<? extends StaticAnimation> jog,
+                                       AnimationManager.AnimationAccessor<? extends StaticAnimation> run) {
+        return new WeaponMotions(style, behaviour, idle, walk, jog, run);
     }
 
     public static WeaponMotionDetails register(
@@ -72,17 +80,17 @@ public class CompatMobCombatBehaviours {
     public static void initEpicFightWeaponMotions() {
         HUMANOID_SWORD = register(
                 CapabilityItem.WeaponCategories.SWORD,
-                motion(CapabilityItem.Styles.ONE_HAND, MobCombatBehaviors.SKELETON_SWORD, Animations.BIPED_IDLE, Animations.BIPED_WALK, Animations.BIPED_RUN),
+                motion(CapabilityItem.Styles.ONE_HAND, MobCombatBehaviors.SKELETON_SWORD, Animations.BIPED_HOLD_LONGSWORD, Animations.BIPED_WALK, Animations.BIPED_RUN),
                 motion(CapabilityItem.Styles.TWO_HAND, MobCombatBehaviors.DROWNED_TRIDENT, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_RUN_DUAL)
         );
         HUMANOID_DAGGER = register(
                 CapabilityItem.WeaponCategories.DAGGER,
-                motion(CapabilityItem.Styles.ONE_HAND, MobCombatBehaviors.HUMANOID_ONEHAND_DAGGER, Animations.BIPED_IDLE, Animations.BIPED_WALK, Animations.BIPED_RUN),
+                motion(CapabilityItem.Styles.ONE_HAND, MobCombatBehaviors.HUMANOID_ONEHAND_DAGGER, Animations.BIPED_IDLE, Animations.BIPED_WALK, Animations.BIPED_HOLD_SPEAR, Animations.BIPED_RUN),
                 motion(CapabilityItem.Styles.TWO_HAND, MobCombatBehaviors.HUMANOID_TWOHAND_DAGGER, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_RUN_DUAL)
         );
         HUMANOID_LONGSWORD = register(
                 CapabilityItem.WeaponCategories.LONGSWORD,
-                motion(CapabilityItem.Styles.TWO_HAND, MobCombatBehaviors.HUMANOID_LONGSWORD, Animations.BIPED_HOLD_LONGSWORD, Animations.BIPED_WALK_LONGSWORD, Animations.BIPED_RUN_LONGSWORD)
+                motion(CapabilityItem.Styles.TWO_HAND, MobCombatBehaviors.HUMANOID_LONGSWORD, Animations.BIPED_HOLD_LONGSWORD, Animations.BIPED_WALK_LONGSWORD, Animations.BIPED_HOLD_SPEAR, Animations.BIPED_RUN_LONGSWORD)
         );
 
         HUMANOID_TACHI = register(

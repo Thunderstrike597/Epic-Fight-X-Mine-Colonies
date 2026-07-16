@@ -14,6 +14,9 @@ public class EpicColoniesConfigClient {
     public static ForgeConfigSpec.ConfigValue<Boolean> HIDE_CITIZEN_HELMET;
     public static ForgeConfigSpec.ConfigValue<Boolean> JOB_ONLY_ARMOR;
     public static ForgeConfigSpec.ConfigValue<List<? extends String>> VISIBLE_ARMOR_JOBS;
+    public static ForgeConfigSpec.ConfigValue<Double> JOG_PLAYBACK_SPEED_MIN;
+    public static ForgeConfigSpec.ConfigValue<Double> JOG_PLAYBACK_SPEED_MAX;
+
 
    private static List<ResourceLocation> defaultArmorJobsLoc = new ArrayList<>();
     private static List<String> defaultArmorJobs = new ArrayList<>();
@@ -44,6 +47,14 @@ public class EpicColoniesConfigClient {
                 .defineList("Visible Armor Jobs", defaultArmorJobs, o -> o instanceof String);
 
         BUILDER.pop();
+        BUILDER.push("Animations");
+        JOG_PLAYBACK_SPEED_MIN = BUILDER
+                .comment("The minimum speed of he citizen jog animation according to their current movement speed")
+                .defineInRange("Jog Animation Min Speed", 1F, 0.01F, 10.0F);
+        JOG_PLAYBACK_SPEED_MAX = BUILDER
+                .comment("The maximum speed of he citizen jog animation according to their current movement speed")
+                .defineInRange("Jog Animation Max Speed", 3.25F, 0.01F, 10.0F);
+
 
         SPEC = BUILDER.build();
     }

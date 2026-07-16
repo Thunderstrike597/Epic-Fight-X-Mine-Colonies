@@ -1,6 +1,7 @@
 package net.kenji.epic_colonies.gameasset;
 
 import net.kenji.epic_colonies.EpicColonies;
+import net.kenji.epic_colonies.EpicColoniesConfigClient;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -44,7 +45,7 @@ public class EpicColoniesAnimations {
         })));
         CITIZEN_JOG = builder.nextAccessor("citizen/living/citizen_jog", (accessor -> new StaticAnimation(0.2F,true, accessor, Armatures.BIPED).addProperty(AnimationProperty.StaticAnimationProperty.PLAY_SPEED_MODIFIER, (self, entitypatch, speed, prevElapsedTime, elapsedTime) -> {
             if (entitypatch instanceof CitizenEntityPatch<?> patchInterface) {
-                return patchInterface.getAnimForwardSpeed(1F, 2.45F);
+                return patchInterface.getAnimForwardSpeed((float) (double)EpicColoniesConfigClient.JOG_PLAYBACK_SPEED_MIN.get(), (float) (double)EpicColoniesConfigClient.JOG_PLAYBACK_SPEED_MAX.get());
             }
             return speed;
         })));
@@ -56,6 +57,14 @@ public class EpicColoniesAnimations {
             if (self.isLinkAnimation()) {
                 return 1.0F;
             } else {
+                if(entitypatch instanceof CitizenEntityPatch<?> patch){
+                    double netY = patch.getOriginal().position().y - patch.lastY; // e.g. N = 4
+                    if (Math.abs(netY) < 0.03) {
+                        return 0.0F; // net-stationary over the window — blocked/idle
+                    }
+
+                    return netY < 0.0 ? -1.0F : 1.0F;
+                }
                 double y = ((LivingEntity)entitypatch.getOriginal()).getY() - entitypatch.getYOld();
 
                 return y < (double)0.0F ? -1.0F : 1.0F;

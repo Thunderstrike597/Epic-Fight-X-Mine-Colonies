@@ -39,6 +39,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import org.jline.utils.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import yesman.epicfight.api.animation.*;
 import yesman.epicfight.api.animation.types.DynamicAnimation;
 import yesman.epicfight.api.animation.types.StaticAnimation;
@@ -47,6 +49,7 @@ import yesman.epicfight.api.client.animation.Layer;
 import yesman.epicfight.api.client.model.Meshes;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.model.armature.HumanoidArmature;
+import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
@@ -58,6 +61,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends HumanoidMobPatch<AbstractEntityCitizen> {
+    private static final Logger log = LoggerFactory.getLogger(CitizenEntityPatch.class);
     public boolean shouldRun = false;
     public static Map<UUID, CitizenPatchData> citizenPatchDataMap = new HashMap<>();
     protected CitizenPatchData citizenPatchData = new CitizenPatchData();
@@ -69,6 +73,10 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
     public AnimationManager.AnimationAccessor<? extends StaticAnimation> eyebrowAnim;
     public AnimationManager.AnimationAccessor<? extends StaticAnimation> eyeMoveAnim;
+
+    private int lastYTickCount = 0;
+    public double lastY = -1;
+    private ItemStack lastHeldItem = ItemStack.EMPTY;
 
     public CitizenEntityPatch() {
         super(Factions.VILLAGER);
@@ -108,6 +116,18 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         }
     }
 
+    @Override
+    public void tick(LivingEvent.LivingTickEvent event) {
+        super.tick(event);
+
+        if(lastY == -1 || lastYTickCount <= 0){
+            lastY = this.getOriginal().position().y();
+            lastYTickCount = 5;
+        }
+        else {
+            lastYTickCount--;
+        }
+    }
 
     @Override
     public void onAddedToWorld() {
@@ -180,7 +200,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     private void onCitizenTick(){
         tickEyesAnim();
         setSleepDir();
-
+        handleHeldItem();
         if(!this.isLogicalClient()) {
             tickCurrentOptionalMotion();
             if (citizenPatchData.currentOptionalCompositeMotion != null) {
@@ -192,6 +212,17 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         }
     }
 
+
+    public void handleHeldItem(){
+        ItemStack mainStack = this.getOriginal().getMainHandItem();
+        CapabilityItem fromCap = EpicFightCapabilities.getItemStackCapability(mainStack);
+        if(this.getOriginal().equipmentHasChanged(mainStack, lastHeldItem)){
+            CapabilityItem toCap = EpicFightCapabilities.getItemStackCapability(lastHeldItem);
+            updateHeldItem(fromCap, toCap, lastHeldItem, mainStack, InteractionHand.MAIN_HAND);
+            lastHeldItem = mainStack;
+        }
+
+    }
     public CitizenPatchData getCitizenPatchData(){
         return this.citizenPatchData;
     }
@@ -328,24 +359,30 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     protected void setWeaponMotions() {
         super.setWeaponMotions();
 
+        Map<WeaponCategory, Map<Style, Set<Pair<LivingMotion, AnimationManager.AnimationAccessor<? extends StaticAnimation>>>>> livingByCategory = new HashMap<>();
+        Map<WeaponCategory, Map<Style, CombatBehaviors.Builder<HumanoidMobPatch<?>>>> attackByCategory = new HashMap<>();
+
         for (CompatMobCombatBehaviours.WeaponMotionDetails details : CompatMobCombatBehaviours.behaviourList) {
-            Arrays.stream(details.motions()).forEach(motions -> {
+            for (CompatMobCombatBehaviours.WeaponMotions motions : details.motions()) {
                 Set<Pair<LivingMotion, AnimationManager.AnimationAccessor<? extends StaticAnimation>>> livingMotionSet = Set.of(
                         Pair.of(LivingMotions.IDLE, motions.idleMotion()),
                         Pair.of(LivingMotions.WALK, motions.walkMotion()),
-                        Pair.of(EpicColoniesLivingMotions.JOG, motions.idleMotion()),
+                        Pair.of(EpicColoniesLivingMotions.JOG, motions.jogMotion()),
                         Pair.of(LivingMotions.CHASE, motions.runMotion())
                 );
 
-                this.weaponLivingMotions.put(
-                        details.category(),
-                        ImmutableMap.of(motions.style(), livingMotionSet));
+                livingByCategory
+                        .computeIfAbsent(details.category(), c -> new HashMap<>())
+                        .put(motions.style(), livingMotionSet); // later registration for the same (category, style) wins
 
-                this.weaponAttackMotions.put(
-                        details.category(),
-                        ImmutableMap.of(motions.style(), motions.behaviour()));
-            });
+                attackByCategory
+                        .computeIfAbsent(details.category(), c -> new HashMap<>())
+                        .put(motions.style(), motions.behaviour());
+            }
         }
+
+        livingByCategory.forEach((category, byStyle) -> this.weaponLivingMotions.put(category, ImmutableMap.copyOf(byStyle)));
+        attackByCategory.forEach((category, byStyle) -> this.weaponAttackMotions.put(category, ImmutableMap.copyOf(byStyle)));
     }
 
 
