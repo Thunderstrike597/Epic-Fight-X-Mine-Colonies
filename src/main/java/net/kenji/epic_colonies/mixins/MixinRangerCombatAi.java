@@ -13,6 +13,7 @@ import com.minecolonies.core.entity.ai.workers.guard.RangerCombatAI;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.pathfinding.navigation.EntityNavigationUtils;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
+import net.kenji.epic_colonies.gameasset.patch.MinecoloniesMonsterPatch;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -96,10 +97,16 @@ public abstract class MixinRangerCombatAi {
             mobSelf.getCapability(EpicFightCapabilities.CAPABILITY_ENTITY).ifPresent((cap) ->{
                 if(cap instanceof CitizenEntityPatch<?> entityPatch) {
                     if(entityPatch.wasUsingBow && entityPatch.bowUseCounter >= 32) {
-                        Log.info("Was Using Bow | IsClientSide: " + entityPatch.getOriginal().level().isClientSide + "| WasUsingBow: " + entityPatch.wasUsingBow + "| usingBowCounter: " + entityPatch.bowUseCounter);
-
                         CombatUtils.shootArrow(arrow, target, chance);
                         ((EntityCitizen) this.mobSelf).playSound(SoundEvents.SKELETON_SHOOT, 1.0F, (float) SoundUtils.getRandomPitch(((EntityCitizen) this.mobSelf).getRandom()));
+                        entityPatch.setWasUsingBow(false);
+                        entityPatch.bowUseCounter = 0;
+                    }
+                }
+                if(cap instanceof MinecoloniesMonsterPatch<?> entityPatch) {
+                    if(entityPatch.wasUsingBow && entityPatch.bowUseCounter >= 32) {
+                        CombatUtils.shootArrow(arrow, target, chance);
+                        (this.mobSelf).playSound(SoundEvents.SKELETON_SHOOT, 1.0F, (float) SoundUtils.getRandomPitch(((EntityCitizen) this.mobSelf).getRandom()));
                         entityPatch.setWasUsingBow(false);
                         entityPatch.bowUseCounter = 0;
                     }

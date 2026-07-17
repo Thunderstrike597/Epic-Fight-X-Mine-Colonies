@@ -1,7 +1,9 @@
 package net.kenji.epic_colonies.network;
 
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
+import com.minecolonies.api.entity.mobs.AbstractEntityMinecoloniesMonster;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
+import net.kenji.epic_colonies.gameasset.patch.MinecoloniesMonsterPatch;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -41,8 +43,13 @@ public record ServerBowActionPacket(UUID entityUuid, boolean wasUsingBow) {
                 if(entity instanceof AbstractEntityCitizen citizen){
                     CitizenEntityPatch<?> citizenEntityPatch = EpicFightCapabilities.getEntityPatch(citizen, CitizenEntityPatch.class);
                     if(citizenEntityPatch != null){
-
                         citizenEntityPatch.setWasUsingBow(packet.wasUsingBow);
+                    }
+                }
+                if(entity instanceof AbstractEntityMinecoloniesMonster monster){
+                    MinecoloniesMonsterPatch<?> monsterPatch = EpicFightCapabilities.getEntityPatch(monster, MinecoloniesMonsterPatch.class);
+                    if(monsterPatch != null){
+                        monsterPatch.setWasUsingBow(packet.wasUsingBow);
                     }
                 }
             }

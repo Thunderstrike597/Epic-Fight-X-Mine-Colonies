@@ -9,6 +9,8 @@ import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
 import net.kenji.epic_colonies.gameasset.armatures.CitizenArmature;
+import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
+import net.kenji.epic_colonies.network.ServerBowActionPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ProjectileWeaponItem;
@@ -42,11 +44,20 @@ public class MinecoloniesMonsterPatch<E extends AbstractEntityMinecoloniesMonste
 
     public static int MAX_BLINK_COUNTER = 20 * 20;
     public int blinkCounter = 0;
+    public boolean wasUsingBow = false;
+    public int bowUseCounter = 0;
     @Override
     public boolean overrideRender() {
         return true;
     }
+    public void setWasUsingBow(boolean value){
+        if(this.getCurrentLivingMotion() == EpicColoniesLivingMotions.JOG) return;
+        this.wasUsingBow = value;
 
+        if(this.getOriginal().level().isClientSide()) {
+            EpicColoniesPacketHandler.sendToServer(new ServerBowActionPacket(this.getOriginal().getUUID(), this.wasUsingBow));
+        }
+    }
     @Override
     public void onAddedToWorld() {
         super.onAddedToWorld();
@@ -101,6 +112,17 @@ public class MinecoloniesMonsterPatch<E extends AbstractEntityMinecoloniesMonste
         if(this.getOriginal().getMainHandItem().getItem() instanceof ProjectileWeaponItem)
             super.commonAggressiveRangedMobUpdateMotion(considerInaction);
         else super.commonMobUpdateMotion(considerInaction);
+    }
+
+    @Override
+    protected void serverTick(LivingEvent.LivingTickEvent event) {
+        super.serverTick(event);
+        if(wasUsingBow && this.getCurrentLivingMotion() != EpicColoniesLivingMotions.JOG){
+            bowUseCounter++;
+        }
+        else{
+            bowUseCounter = 0;
+        }
     }
 
     @Override
