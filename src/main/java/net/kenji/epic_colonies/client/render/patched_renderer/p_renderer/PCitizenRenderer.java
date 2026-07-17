@@ -1,18 +1,17 @@
 package net.kenji.epic_colonies.client.render.patched_renderer.p_renderer;
 
 import com.minecolonies.api.client.render.modeltype.CitizenModel;
+import com.minecolonies.api.client.render.modeltype.ModModelTypes;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.ICitizenDataView;
 import com.minecolonies.api.colony.jobs.IJob;
 import com.minecolonies.api.colony.jobs.IJobView;
-import com.minecolonies.api.colony.jobs.ModJobs;
 import com.minecolonies.api.colony.jobs.registry.JobEntry;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.core.client.render.CitizenArmorLayer;
 import com.minecolonies.core.client.render.RenderBipedCitizen;
-import com.minecolonies.core.colony.jobs.AbstractJobCrafter;
-import com.minecolonies.core.colony.jobs.JobMechanic;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.datafixers.util.Pair;
 import net.kenji.epic_colonies.EpicColonies;
 import net.kenji.epic_colonies.api.data.CitizenMeshCache;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
@@ -20,23 +19,19 @@ import net.kenji.epic_colonies.client.meshes.EpicColoniesMesh;
 import net.kenji.epic_colonies.client.patched_layers.CitizenDetailsLayer;
 import net.kenji.epic_colonies.client.patched_layers.CitizenWearableItemLayer;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
-import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import org.jline.utils.Log;
 import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.model.Meshes;
-import yesman.epicfight.api.client.model.SkinnedMesh;
 import yesman.epicfight.api.utils.math.OpenMatrix4f;
-import yesman.epicfight.client.renderer.patched.entity.PHumanoidRenderer;
 import yesman.epicfight.client.renderer.patched.entity.PatchedLivingEntityRenderer;
 import yesman.epicfight.client.renderer.patched.layer.PatchedItemInHandLayer;
-import yesman.epicfight.client.renderer.patched.layer.WearableItemLayer;
 
 import java.util.Map;
 
@@ -44,7 +39,7 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
     public PCitizenRenderer(Meshes.MeshAccessor<EpicColoniesMesh> mesh, EntityRendererProvider.Context context, EntityType<?> entityType) {
         super(context, entityType);
         this.addPatchedLayer(ItemInHandLayer.class, new PatchedItemInHandLayer<>());
-        this.addCustomLayer(new CitizenDetailsLayer<>(getDefaultMesh(), EpicColoniesMeshes.jobMeshMapMale, EpicColoniesMeshes.jobMeshMapFemale, context.getModelManager()));
+        this.addCustomLayer(new CitizenDetailsLayer<>(getDefaultMesh(), EpicColoniesMeshes.meshMap));
 
         this.addPatchedLayer(CitizenArmorLayer.class, new CitizenWearableItemLayer<>(mesh, false, context.getModelManager()));
     }
@@ -66,8 +61,6 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
 
 
     public AssetAccessor<EpicColoniesMesh> getCitizenMesh(AbstractEntityCitizen citizen, boolean isMale) {
-        Map<JobEntry, Meshes.MeshAccessor<EpicColoniesMesh>> meshMap = isMale ? EpicColoniesMeshes.jobMeshMapMale : EpicColoniesMeshes.jobMeshMapFemale;
-        Meshes.MeshAccessor<EpicColoniesMesh> citizenMesh = isMale ? EpicColoniesMeshes.CITIZEN_MALE : EpicColoniesMeshes.CITIZEN_FEMALE;
         Meshes.MeshAccessor<EpicColoniesMesh> defaultMesh = isMale ? EpicColoniesMeshes.DEFAULT_MALE : EpicColoniesMeshes.DEFAULT_FEMALE;
         Meshes.MeshAccessor<EpicColoniesMesh> childMesh = isMale ? EpicColoniesMeshes.CHILD_MALE : EpicColoniesMeshes.CHILD_FEMALE;
 
@@ -130,8 +123,10 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
             if (isChild) {
                 return childMesh;
             }
+            if(citizen.getModelType() != null) {
+                return EpicColoniesMeshes.meshMap.getOrDefault(new Pair<Boolean, ResourceLocation>(citizen.isFemale(), citizen.getModelType()), defaultMesh);
+            }
         }
-
 
         return defaultMesh;
     }

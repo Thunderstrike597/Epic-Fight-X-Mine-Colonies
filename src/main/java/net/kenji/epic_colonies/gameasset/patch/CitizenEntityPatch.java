@@ -19,6 +19,7 @@ import net.kenji.epic_colonies.api.CitizenPatchData;
 import net.kenji.epic_colonies.api.data.CitizenMeshCache;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMesh;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
+import net.kenji.epic_colonies.compat.CombatBehaviourBase;
 import net.kenji.epic_colonies.compat.CompatMobCombatBehaviours;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
@@ -27,6 +28,7 @@ import net.kenji.epic_colonies.mixins.LivingEntityAccessor;
 import net.kenji.epic_colonies.network.ChangeLivingMotion;
 import net.kenji.epic_colonies.network.ClientCitizenSyncPacket;
 import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
+import net.kenji.epic_colonies.network.ServerBowActionPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -55,6 +57,7 @@ import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
 import yesman.epicfight.world.capabilities.item.Style;
 import yesman.epicfight.world.capabilities.item.WeaponCategory;
+import yesman.epicfight.world.damagesource.StunType;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
 
 import java.util.*;
@@ -77,7 +80,8 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     private int lastYTickCount = 0;
     public double lastY = -1;
     private ItemStack lastHeldItem = ItemStack.EMPTY;
-
+    public boolean wasUsingBow = false;
+    public int bowUseCounter = 0;
     public CitizenEntityPatch() {
         super(Factions.VILLAGER);
     }
@@ -92,6 +96,15 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         return true;
     }
 
+
+    public void setWasUsingBow(boolean value){
+        if(this.getCurrentLivingMotion() == EpicColoniesLivingMotions.JOG) return;
+        this.wasUsingBow = value;
+
+        if(this.getOriginal().level().isClientSide()) {
+            EpicColoniesPacketHandler.sendToServer(new ServerBowActionPacket(this.getOriginal().getUUID(), this.wasUsingBow));
+        }
+    }
 
     public static AssetAccessor<EpicColoniesMesh> getMeshFromTexture(AbstractEntityCitizen citizen, boolean isChild){
 
@@ -142,7 +155,6 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         animator.playAnimation(eyeMoveAnim, 0F);
 
 
-        boolean isChild = false;
         AbstractEntityCitizen citizen = this.getOriginal();
 
 
@@ -235,7 +247,14 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     public void serverTick(LivingEvent.LivingTickEvent event) {
         super.serverTick(event); // already dispatches to clientTick()/serverTick() internally, including onCitizenTick() on the client
         onCitizenTick(); // only need to run it here for the server, since clientTick() already covers the client path
+        if(wasUsingBow && this.getCurrentLivingMotion() != EpicColoniesLivingMotions.JOG){
+            bowUseCounter++;
+        }
+        else{
+            bowUseCounter = 0;
+        }
     }
+
 
     public JobEntry getJobEntryFromDataView(){
         AbstractEntityCitizen citizen = this.getOriginal();
@@ -353,8 +372,6 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
 
 
-
-
     @Override
     protected void setWeaponMotions() {
         super.setWeaponMotions();
@@ -362,8 +379,8 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         Map<WeaponCategory, Map<Style, Set<Pair<LivingMotion, AnimationManager.AnimationAccessor<? extends StaticAnimation>>>>> livingByCategory = new HashMap<>();
         Map<WeaponCategory, Map<Style, CombatBehaviors.Builder<HumanoidMobPatch<?>>>> attackByCategory = new HashMap<>();
 
-        for (CompatMobCombatBehaviours.WeaponMotionDetails details : CompatMobCombatBehaviours.behaviourList) {
-            for (CompatMobCombatBehaviours.WeaponMotions motions : details.motions()) {
+        for (CombatBehaviourBase.WeaponMotionDetails details : CombatBehaviourBase.behaviourList) {
+            for (CombatBehaviourBase.WeaponMotions motions : details.motions()) {
                 Set<Pair<LivingMotion, AnimationManager.AnimationAccessor<? extends StaticAnimation>>> livingMotionSet = Set.of(
                         Pair.of(LivingMotions.IDLE, motions.idleMotion()),
                         Pair.of(LivingMotions.WALK, motions.walkMotion()),
@@ -560,6 +577,10 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         }
     }
 
+    @Override
+    public float getImpact(InteractionHand hand) {
+        return 1.5F;
+    }
 
     @Override
     public void initAnimator(Animator animator) {

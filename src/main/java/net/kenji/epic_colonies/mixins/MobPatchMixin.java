@@ -6,6 +6,7 @@ import net.kenji.epic_colonies.gameasset.patch.MercenaryPatch;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.UseAnim;
+import org.jline.utils.Log;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -116,11 +117,14 @@ public class MobPatchMixin {
                     self.currentCompositeMotion = LivingMotions.RELOAD;
                 } else {
                     self.currentCompositeMotion = LivingMotions.AIM;
+                    patch.setWasUsingBow(true);
                 }
             } else if (CrossbowItem.isCharged(((Mob)self.getOriginal()).getMainHandItem())) {
                 self.currentCompositeMotion = LivingMotions.AIM;
+                patch.setWasUsingBow(true);
             } else {
                 self.currentCompositeMotion = self.currentLivingMotion;
+                patch.setWasUsingBow(false);
             }
         }
         if (self instanceof MercenaryPatch<?> patch) {

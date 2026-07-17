@@ -5,9 +5,10 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "epic_colonies.refmap.json",
   "mixins": [
-    "MixinAttackMoveAiRaider",
+    "MixinAttackMoveAi",
     "MobPatchMixin",
     "AccessorTargetAi",
+    "MixinRangerCombatAi",
     "LivingEntityAccessor",
     "AccessorHumanoidArmorLayer",
     "AccessorLivingEntityRenderer",

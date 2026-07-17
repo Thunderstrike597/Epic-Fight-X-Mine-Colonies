@@ -6,7 +6,6 @@ import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
 import net.kenji.epic_colonies.gameasset.patch.MercenaryPatch;
 import net.kenji.epic_colonies.gameasset.patch.MinecoloniesMonsterPatch;
-import net.kenji.epic_colonies.gameasset.patch.VisitorEntityPatch;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;

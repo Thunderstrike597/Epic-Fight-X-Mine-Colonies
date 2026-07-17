@@ -1,11 +1,13 @@
 package net.kenji.epic_colonies.client.patched_layers;
 
+import com.minecolonies.api.client.render.modeltype.IModelType;
+import com.minecolonies.api.client.render.modeltype.ModModelTypes;
 import com.minecolonies.api.colony.ICitizenDataView;
 import com.minecolonies.api.colony.jobs.IJobView;
 import com.minecolonies.api.colony.jobs.registry.JobEntry;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
-import com.minecolonies.core.colony.CitizenDataView;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.datafixers.util.Pair;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMesh;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
 import net.minecraft.client.model.HumanoidModel;
@@ -14,7 +16,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
-import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import org.jetbrains.annotations.Nullable;
@@ -22,25 +23,23 @@ import org.jline.utils.Log;
 import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.model.Meshes;
 import yesman.epicfight.api.utils.math.OpenMatrix4f;
-import yesman.epicfight.client.mesh.HumanoidMesh;
 import yesman.epicfight.client.renderer.patched.layer.ModelRenderLayer;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class CitizenDetailsLayer<E extends AbstractEntityCitizen, T extends LivingEntityPatch<E>,
         M extends HumanoidModel<E>, AM extends EpicColoniesMesh>
         extends ModelRenderLayer<E, T, M, HumanoidArmorLayer<E, M, M>, AM> {
 
-    private final Map<JobEntry, Meshes.MeshAccessor<EpicColoniesMesh>> jobMeshesMale;
-    private final Map<JobEntry, Meshes.MeshAccessor<EpicColoniesMesh>> jobMeshesFemale;
+    private final  Map<Pair<Boolean, ResourceLocation>, Meshes.MeshAccessor<EpicColoniesMesh>> meshMap;
 
     private EpicColoniesMesh currentMesh;
 
-    public CitizenDetailsLayer(AssetAccessor<AM> defaultMesh, Map<JobEntry, Meshes.MeshAccessor<EpicColoniesMesh>> jobMeshesMale, Map<JobEntry, Meshes.MeshAccessor<EpicColoniesMesh>> jobMeshesFemale, ModelManager modelManager) {
+    public CitizenDetailsLayer(AssetAccessor<AM> defaultMesh, Map<Pair<Boolean, ResourceLocation>, Meshes.MeshAccessor<EpicColoniesMesh>> meshMap) {
         super(defaultMesh);
-        this.jobMeshesMale = jobMeshesMale;
-        this.jobMeshesFemale = jobMeshesFemale;
+        this.meshMap = meshMap;
     }
 
     @Override
@@ -68,16 +67,18 @@ public class CitizenDetailsLayer<E extends AbstractEntityCitizen, T extends Livi
         ICitizenDataView view = citizen.getCitizenDataView();
         boolean female = citizen.isFemale();
         Meshes.MeshAccessor<EpicColoniesMesh> defaultMesh = female ? EpicColoniesMeshes.DEFAULT_FEMALE : EpicColoniesMeshes.DEFAULT_MALE;
+        Meshes.MeshAccessor<EpicColoniesMesh> childMesh = !female ? EpicColoniesMeshes.CHILD_MALE : EpicColoniesMeshes.CHILD_FEMALE;
 
         if (view == null) return defaultMesh;
 
         IJobView jobView = view.getJobView();
-        if (jobView == null) return defaultMesh;
+        if (jobView == null || jobView.getEntry() == null) {
+            if(view.isChild()){
+                return childMesh;
+            }
+        }
 
-        JobEntry job = jobView.getEntry();
-        Map<JobEntry, Meshes.MeshAccessor<EpicColoniesMesh>> jobMeshes = female ? this.jobMeshesFemale : this.jobMeshesMale;
-
-        return jobMeshes.getOrDefault(job, defaultMesh);
+        return meshMap.getOrDefault(new Pair<>(female, citizen.getModelType()), defaultMesh);
     }
 
     @Override
@@ -133,10 +134,4 @@ public class CitizenDetailsLayer<E extends AbstractEntityCitizen, T extends Livi
         this.currentMesh = null;
     }
 
-    private ResourceLocation getAccessoryTexture(EpicColoniesMesh mesh) {
-        if (mesh.getRenderProperties() != null && mesh.getRenderProperties().customTexturePath() != null) {
-            return mesh.getRenderProperties().customTexturePath();
-        }
-        throw new IllegalStateException("No texture resolution configured for accessory mesh " + mesh);
-    }
 }

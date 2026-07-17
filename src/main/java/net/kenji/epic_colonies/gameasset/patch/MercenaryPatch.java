@@ -1,17 +1,19 @@
 package net.kenji.epic_colonies.gameasset.patch;
 
+import com.google.common.collect.ImmutableMap;
+import com.mojang.datafixers.util.Pair;
+import net.kenji.epic_colonies.compat.CombatBehaviourBase;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
+import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
 import net.kenji.epic_colonies.gameasset.armatures.CitizenArmature;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingEvent;
-import yesman.epicfight.api.animation.AnimationPlayer;
-import yesman.epicfight.api.animation.Animator;
-import yesman.epicfight.api.animation.Joint;
-import yesman.epicfight.api.animation.LivingMotions;
+import yesman.epicfight.api.animation.*;
+import yesman.epicfight.api.animation.types.StaticAnimation;
 import yesman.epicfight.api.client.animation.Layer;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.gameasset.MobCombatBehaviors;
@@ -20,9 +22,14 @@ import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
+import yesman.epicfight.world.capabilities.item.Style;
 import yesman.epicfight.world.capabilities.item.WeaponCategory;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
 import yesman.epicfight.world.item.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class MercenaryPatch<E extends PathfinderMob> extends HumanoidMobPatch<PathfinderMob> {
 
@@ -57,34 +64,33 @@ public class MercenaryPatch<E extends PathfinderMob> extends HumanoidMobPatch<Pa
     }
 
     @Override
-    protected CombatBehaviors.Builder<HumanoidMobPatch<?>> getHoldingItemWeaponMotionBuilder() {
-        CapabilityItem mainHandCap = EpicFightCapabilities.getItemStackCapability(this.getOriginal().getMainHandItem());
-        if (mainHandCap == null) return MobCombatBehaviors.HUMANOID_FIST;
-        WeaponCategory category = mainHandCap.getWeaponCategory();
-        if (category == CapabilityItem.WeaponCategories.SWORD) {
-            return MobCombatBehaviors.SKELETON_SWORD;
-        }
-        if (this.getOriginal().getMainHandItem().getItem() instanceof SpearItem || category == CapabilityItem.WeaponCategories.SPEAR) {
-            if (this.getOriginal().getOffhandItem().isEmpty())
-                return MobCombatBehaviors.HUMANOID_SPEAR_TWOHAND;
-            return MobCombatBehaviors.HUMANOID_SPEAR_ONEHAND;
-        }
-        if (this.getOriginal().getMainHandItem().getItem() instanceof DaggerItem || category == CapabilityItem.WeaponCategories.DAGGER) {
-            if (this.getOriginal().getOffhandItem().getItem() instanceof DaggerItem || category == CapabilityItem.WeaponCategories.DAGGER)
-                return MobCombatBehaviors.HUMANOID_TWOHAND_DAGGER;
-            return MobCombatBehaviors.HUMANOID_ONEHAND_DAGGER;
-        }
-        if (this.getOriginal().getMainHandItem().getItem() instanceof LongswordItem || category == CapabilityItem.WeaponCategories.LONGSWORD) {
-            return MobCombatBehaviors.HUMANOID_LONGSWORD;
-        }
-        if (this.getOriginal().getMainHandItem().getItem() instanceof TachiItem || category == CapabilityItem.WeaponCategories.TACHI) {
-            return MobCombatBehaviors.HUMANOID_TACHI;
-        }
-        if (this.getOriginal().getMainHandItem().getItem() instanceof GreatswordItem || category == CapabilityItem.WeaponCategories.GREATSWORD) {
-            return MobCombatBehaviors.HUMANOID_GREATSWORD;
+    protected void setWeaponMotions() {
+        super.setWeaponMotions();
+
+        Map<WeaponCategory, Map<Style, Set<Pair<LivingMotion, AnimationManager.AnimationAccessor<? extends StaticAnimation>>>>> livingByCategory = new HashMap<>();
+        Map<WeaponCategory, Map<Style, CombatBehaviors.Builder<HumanoidMobPatch<?>>>> attackByCategory = new HashMap<>();
+
+        for (CombatBehaviourBase.WeaponMotionDetails details : CombatBehaviourBase.behaviourList) {
+            for (CombatBehaviourBase.WeaponMotions motions : details.motions()) {
+                Set<Pair<LivingMotion, AnimationManager.AnimationAccessor<? extends StaticAnimation>>> livingMotionSet = Set.of(
+                        Pair.of(LivingMotions.IDLE, motions.idleMotion()),
+                        Pair.of(LivingMotions.WALK, motions.walkMotion()),
+                        Pair.of(EpicColoniesLivingMotions.JOG, motions.jogMotion()),
+                        Pair.of(LivingMotions.CHASE, motions.runMotion())
+                );
+
+                livingByCategory
+                        .computeIfAbsent(details.category(), c -> new HashMap<>())
+                        .put(motions.style(), livingMotionSet); // later registration for the same (category, style) wins
+
+                attackByCategory
+                        .computeIfAbsent(details.category(), c -> new HashMap<>())
+                        .put(motions.style(), motions.behaviour());
+            }
         }
 
-        return super.getHoldingItemWeaponMotionBuilder();
+        livingByCategory.forEach((category, byStyle) -> this.weaponLivingMotions.put(category, ImmutableMap.copyOf(byStyle)));
+        attackByCategory.forEach((category, byStyle) -> this.weaponAttackMotions.put(category, ImmutableMap.copyOf(byStyle)));
     }
 
     @Override
