@@ -103,14 +103,6 @@ public abstract class MixinRangerCombatAi {
                         entityPatch.bowUseCounter = 0;
                     }
                 }
-                if(cap instanceof MinecoloniesMonsterPatch<?> entityPatch) {
-                    if(entityPatch.wasUsingBow && entityPatch.bowUseCounter >= 32) {
-                        CombatUtils.shootArrow(arrow, target, chance);
-                        (this.mobSelf).playSound(SoundEvents.SKELETON_SHOOT, 1.0F, (float) SoundUtils.getRandomPitch(((EntityCitizen) this.mobSelf).getRandom()));
-                        entityPatch.setWasUsingBow(false);
-                        entityPatch.bowUseCounter = 0;
-                    }
-                }
             });
 
         }
