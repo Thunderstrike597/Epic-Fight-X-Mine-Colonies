@@ -9,6 +9,7 @@
     "MobPatchMixin",
     "AccessorTargetAi",
     "MixinRangerCombatAi",
+    "MixinRaiderRangedAi",
     "LivingEntityAccessor",
     "AccessorHumanoidArmorLayer",
     "AccessorLivingEntityRenderer",
