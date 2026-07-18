@@ -14,13 +14,11 @@ import com.minecolonies.core.entity.ai.minimal.EntityAIEatTask;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.other.SittingEntity;
 import com.mojang.datafixers.util.Pair;
-import net.corruptdog.cdm.world.item.CDAddonItems;
 import net.kenji.epic_colonies.api.CitizenPatchData;
 import net.kenji.epic_colonies.api.data.CitizenMeshCache;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMesh;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
 import net.kenji.epic_colonies.compat.CombatBehaviourBase;
-import net.kenji.epic_colonies.compat.CompatMobCombatBehaviours;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
@@ -33,22 +31,22 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingEvent;
-import org.jline.utils.Log;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import yesman.epicfight.api.animation.*;
 import yesman.epicfight.api.animation.types.DynamicAnimation;
 import yesman.epicfight.api.animation.types.StaticAnimation;
 import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.animation.Layer;
-import yesman.epicfight.api.client.model.Meshes;
+import yesman.epicfight.api.utils.math.OpenMatrix4f;
+import yesman.epicfight.api.utils.math.Vec3f;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.model.armature.HumanoidArmature;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
@@ -57,15 +55,11 @@ import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
 import yesman.epicfight.world.capabilities.item.Style;
 import yesman.epicfight.world.capabilities.item.WeaponCategory;
-import yesman.epicfight.world.damagesource.StunType;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends HumanoidMobPatch<AbstractEntityCitizen> {
-    private static final Logger log = LoggerFactory.getLogger(CitizenEntityPatch.class);
-    public boolean shouldRun = false;
     public static Map<UUID, CitizenPatchData> citizenPatchDataMap = new HashMap<>();
     protected CitizenPatchData citizenPatchData = new CitizenPatchData();
 
@@ -87,10 +81,14 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
     public boolean didJump = false;
 
-    private WeaponCategory lastWeaponCategory = null;
-    private Style lastStyle = null;
-    public static int MAX_BLINK_COUNTER = 20 * 20;
-    public int blinkCounter = 0;
+
+    private static float LOOK_RANGE = 8.0F;
+    private static float FADE_DISTANCE = 2.0F;
+    private static float EYE_ANGLE_SENSITIVITY_DEG = 88F;        // how far off-center = full eye deflection (unchanged)
+    private static float MAX_TRACKING_ANGLE_DEG = 60;  // beyond this angle, citizen can't plausibly "see" the player - eyes go centered
+    private static float ANGLE_FADE_DEG = 15F;
+    private static float MAX_EYE_OFFSET = 0.075F;
+    private static float HEAD_TURN_SPEED_DEG = 8.0F;
     @Override
     public boolean overrideRender() {
         return true;
@@ -129,6 +127,84 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         }
     }
 
+    Player getNearestPlayer(Entity entity){
+        Player nearest = entity.level().getNearestPlayer(entity, LOOK_RANGE);
+
+        if(nearest != null && !nearest.isSpectator() && !nearest.isInvisible()){
+            if(this.getTarget() == null)
+                return nearest;
+        }
+        return null;
+    }
+
+    @Override
+    public void poseTick(DynamicAnimation animation,
+                         yesman.epicfight.api.animation.Pose pose,
+                         float elapsedTime, float partialTick) {
+        super.poseTick(animation, pose, elapsedTime, partialTick);
+
+        if (!pose.hasTransform("Eye_L") && !pose.hasTransform("Eye_R")) {
+            return;
+        }
+
+        AbstractEntityCitizen citizen = this.getOriginal();
+        float sideOffset = 0.0F;
+        Player nearest = getNearestPlayer(citizen);
+
+        if (nearest != null) {
+            double d0 = nearest.getX() - citizen.getX();
+            double d2 = nearest.getZ() - citizen.getZ();
+            float wantedYRot = (float) (Mth.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
+
+            float headYaw = Mth.rotLerp(partialTick, citizen.yHeadRotO, citizen.yHeadRot);
+            float relativeYaw = Mth.wrapDegrees(wantedYRot - headYaw);
+            float absRelativeYaw = Math.abs(relativeYaw);
+
+            // field-of-view gate: fades to 0 as the player approaches MAX_TRACKING_ANGLE_DEG,
+            // independent of how the eyes are clamped/normalized below
+            float angleFade = Mth.clamp((MAX_TRACKING_ANGLE_DEG - absRelativeYaw) / ANGLE_FADE_DEG, 0.0F, 1.0F);
+
+            float clamped = Mth.clamp(relativeYaw, -EYE_ANGLE_SENSITIVITY_DEG, EYE_ANGLE_SENSITIVITY_DEG);
+            float t = clamped / EYE_ANGLE_SENSITIVITY_DEG;
+
+            double dist = Math.sqrt(d0 * d0 + d2 * d2);
+            float distFade = Mth.clamp((float) ((LOOK_RANGE - dist) / FADE_DISTANCE), 0.0F, 1.0F);
+
+            sideOffset = t * MAX_EYE_OFFSET * distFade * angleFade;
+        }
+
+        Vec3f translation = new Vec3f(sideOffset, 0.0F, 0.0F);
+
+        if (pose.hasTransform("Eye_R")) {
+            pose.orElseEmpty("Eye_R").frontResult(JointTransform.translation(translation), OpenMatrix4f::mul);
+        }
+        if (pose.hasTransform("Eye_L")) {
+            pose.orElseEmpty("Eye_L").frontResult(JointTransform.translation(translation), OpenMatrix4f::mul);
+        }
+    }
+
+    public void manageHeadRotWithEyes(){
+
+
+        AbstractEntityCitizen citizen = this.getOriginal();
+        Player nearest = citizen.level().getNearestPlayer(citizen, LOOK_RANGE);
+
+        if (nearest != null) {
+            double d0 = nearest.getX() - citizen.getX();
+            double d2 = nearest.getZ() - citizen.getZ();
+            float wantedYRot = (float) (Mth.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
+
+            float relativeToHead = Mth.wrapDegrees(wantedYRot - citizen.yHeadRot);
+
+            if (Math.abs(relativeToHead) > EYE_ANGLE_SENSITIVITY_DEG / 1.15F) {
+                // eyes alone can't cover this angle - close the remaining gap with the head, gradually
+                float overshoot = relativeToHead - Math.signum(relativeToHead) * EYE_ANGLE_SENSITIVITY_DEG;
+                float step = Mth.clamp(overshoot, - HEAD_TURN_SPEED_DEG, HEAD_TURN_SPEED_DEG);
+                citizen.yHeadRot = Mth.wrapDegrees(citizen.yHeadRot + step);
+            }
+        }
+    }
+
     @Override
     public void tick(LivingEvent.LivingTickEvent event) {
         super.tick(event);
@@ -139,6 +215,9 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         }
         else {
             lastYTickCount--;
+        }
+        if(getNearestPlayer(this.getOriginal()) != null){
+            getAnimator().playAnimation(eyeMoveAnim, 0F);
         }
     }
 
@@ -247,6 +326,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     public void serverTick(LivingEvent.LivingTickEvent event) {
         super.serverTick(event); // already dispatches to clientTick()/serverTick() internally, including onCitizenTick() on the client
         onCitizenTick(); // only need to run it here for the server, since clientTick() already covers the client path
+        manageHeadRotWithEyes();
         if(wasUsingBow && this.getCurrentLivingMotion() != EpicColoniesLivingMotions.JOG){
             bowUseCounter++;
         }
