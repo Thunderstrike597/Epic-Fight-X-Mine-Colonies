@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.ICitizenDataView;
+import com.minecolonies.api.colony.IColony;
 import com.minecolonies.api.colony.jobs.IJob;
 import com.minecolonies.api.colony.jobs.IJobView;
 import com.minecolonies.api.colony.jobs.registry.JobEntry;
@@ -15,6 +16,7 @@ import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.other.SittingEntity;
 import com.mojang.datafixers.util.Pair;
 import net.kenji.epic_colonies.api.CitizenPatchData;
+import net.kenji.epic_colonies.api.FacialEmotionExpressions;
 import net.kenji.epic_colonies.api.data.CitizenMeshCache;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMesh;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMeshes;
@@ -27,8 +29,6 @@ import net.kenji.epic_colonies.network.ChangeLivingMotion;
 import net.kenji.epic_colonies.network.ClientCitizenSyncPacket;
 import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
 import net.kenji.epic_colonies.network.ServerBowActionPacket;
-import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -49,7 +49,6 @@ import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.animation.Layer;
 import yesman.epicfight.api.utils.math.OpenMatrix4f;
 import yesman.epicfight.api.utils.math.Vec3f;
-import yesman.epicfight.client.world.capabilites.entitypatch.player.AbstractClientPlayerPatch;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.model.armature.HumanoidArmature;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
@@ -71,7 +70,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     public static AnimationManager.AnimationAccessor<? extends StaticAnimation> DEFAULT_BROW_ANIM = null;
     public static AnimationManager.AnimationAccessor<? extends StaticAnimation> DEFAULT_EYES_ANIM = null;
 
-    public AnimationManager.AnimationAccessor<? extends StaticAnimation> eyebrowAnim;
+    public AnimationManager.AnimationAccessor<? extends StaticAnimation> facialAnim;
     public AnimationManager.AnimationAccessor<? extends StaticAnimation> eyeMoveAnim;
 
     private int lastYTickCount = 0;
@@ -222,6 +221,21 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         if(getNearestPlayer(this.getOriginal()) != null){
             getAnimator().playAnimation(eyeMoveAnim, 0F);
         }
+
+        boolean clientSide = this.getOriginal().level().isClientSide();
+        ICitizenDataView iCitizenDataView = clientSide ? this.getOriginal().getCitizenDataView() : null;
+        ICitizenData iCitizenData = !clientSide ? this.getOriginal().getCitizenData() : null;
+
+        if (iCitizenDataView != null) {
+            if(iCitizenDataView.isChild()){
+                getAnimator().playAnimation(facialAnim, 0F);
+            }
+        }
+        if (iCitizenData != null) {
+            if(iCitizenData.isChild()){
+                getAnimator().playAnimation(facialAnim, 0F);
+            }
+        }
     }
 
     @Override
@@ -230,10 +244,10 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         DEFAULT_BROW_ANIM = EpicColoniesAnimations.CITIZEN_BLINK;
         DEFAULT_EYES_ANIM = EpicColoniesAnimations.CITIZEN_EYES_MOVE;
 
-        eyebrowAnim = EpicColoniesAnimations.CITIZEN_BLINK;
+        facialAnim = EpicColoniesAnimations.CITIZEN_BLINK;
         eyeMoveAnim = EpicColoniesAnimations.CITIZEN_EYES_MOVE;
 
-        animator.playAnimation(eyebrowAnim, 0F);
+        animator.playAnimation(facialAnim, 0F);
         animator.playAnimation(eyeMoveAnim, 0F);
 
 
@@ -246,7 +260,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
                     this.getOriginal().setIsChild(cached.isChild());
                 }
         }
-        if (citizen.getCitizenData() == null) {
+        if (!this.getOriginal().level().isClientSide() && citizen.getCitizenData() == null) {
             CitizenMeshCache.Entry cached = CitizenMeshCache.get(citizen.getUUID());
             if (cached != null) {
                 this.getOriginal().setIsChild(cached.isChild());
@@ -290,14 +304,20 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
     public void tickEyesAnim(){
         if(isCitizenAsleep())
-            this.eyebrowAnim = EpicColoniesAnimations.CITIZEN_EYES_CLOSED;
-        else this.eyebrowAnim = DEFAULT_BROW_ANIM;
+            this.facialAnim = EpicColoniesAnimations.CITIZEN_EYES_CLOSED;
+        else this.facialAnim = DEFAULT_BROW_ANIM;
     }
 
     private void onCitizenTick(){
         tickEyesAnim();
         setSleepDir();
         handleHeldItem();
+        AnimationManager.AnimationAccessor<? extends StaticAnimation> newFacialAnim = getFacialBrowAnimation();
+
+        if(facialAnim != newFacialAnim){
+            facialAnim = newFacialAnim;
+        }
+
         if(!this.isLogicalClient()) {
             tickCurrentOptionalMotion();
             if (citizenPatchData.currentOptionalCompositeMotion != null) {
@@ -309,6 +329,25 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         }
     }
 
+    public AnimationManager.AnimationAccessor<? extends StaticAnimation> getFacialBrowAnimation() {
+        AbstractEntityCitizen citizen = this.getOriginal();
+        ICitizenDataView citizenDataView = citizen.level().isClientSide() ? citizen.getCitizenDataView() : null;
+        ICitizenData citizenData = !citizen.level().isClientSide() ? citizen.getCitizenData() : null;
+        double happiness = 5.0;
+        if(citizenDataView != null && citizen.level().isClientSide()){
+            if(citizenDataView.isChild()) return facialAnim;
+           happiness = citizenDataView.getHappiness();
+        }
+        if(citizen.getCitizenColonyHandler() == null || citizen.getCitizenColonyHandler().getColony() == null) return facialAnim;
+        IColony colony = citizen.getCitizenColonyHandler().getColony();
+        if(citizenData != null){
+            if(citizenData.isChild()) return facialAnim;
+            happiness = citizenData.getCitizenHappinessHandler().getHappiness(colony, citizenData);
+        }
+
+
+        return FacialEmotionExpressions.getAnimationFromHappiness(happiness);
+    }
 
     public void handleHeldItem(){
         ItemStack mainStack = this.getOriginal().getMainHandItem();
@@ -631,7 +670,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
         onCitizenTick();
 
-        playCompositeOnLayer(eyebrowAnim, Layer.Priority.HIGHEST);
+        playCompositeOnLayer(facialAnim, Layer.Priority.HIGHEST);
         playCompositeOnLayer(eyeMoveAnim, Layer.Priority.LOWEST);
 
         playCompositeOptionalAnimation();

@@ -20,6 +20,12 @@ public class EpicColoniesAnimations {
         event.newBuilder(EpicColonies.MODID, EpicColoniesAnimations::build);    }
 
     public static AnimationManager.AnimationAccessor<StaticAnimation> CITIZEN_BLINK;
+    public static AnimationManager.AnimationAccessor<StaticAnimation> CHILD_BLINK;
+
+    public static AnimationManager.AnimationAccessor<StaticAnimation> CITIZEN_BLINK_ANGRY;
+    public static AnimationManager.AnimationAccessor<StaticAnimation> CITIZEN_BLINK_HAPPY;
+    public static AnimationManager.AnimationAccessor<StaticAnimation> CITIZEN_BLINK_SAD;
+
     public static AnimationManager.AnimationAccessor<StaticAnimation> CITIZEN_EYES_CLOSED;
 
     public static AnimationManager.AnimationAccessor<StaticAnimation> CITIZEN_EYES_MOVE;
@@ -34,6 +40,12 @@ public class EpicColoniesAnimations {
 
     private static void build(AnimationManager.AnimationBuilder builder){
         CITIZEN_BLINK = builder.nextAccessor("citizen/living/citizen_blink", (accessor -> new StaticAnimation(0.2F,true, accessor, EpicColoniesArmatures.CITIZEN_REGULAR)));
+        CHILD_BLINK = builder.nextAccessor("citizen/living/child_blink", (accessor -> new StaticAnimation(0.2F,true, accessor, EpicColoniesArmatures.CITIZEN_REGULAR)));
+
+        CITIZEN_BLINK_ANGRY = builder.nextAccessor("citizen/living/citizen_blink_angry", (accessor -> new StaticAnimation(0.2F,true, accessor, EpicColoniesArmatures.CITIZEN_REGULAR)));
+        CITIZEN_BLINK_HAPPY = builder.nextAccessor("citizen/living/citizen_blink_happy", (accessor -> new StaticAnimation(0.2F,true, accessor, EpicColoniesArmatures.CITIZEN_REGULAR)));
+        CITIZEN_BLINK_SAD = builder.nextAccessor("citizen/living/citizen_blink_sad", (accessor -> new StaticAnimation(0.2F,true, accessor, EpicColoniesArmatures.CITIZEN_REGULAR)));
+
         CITIZEN_EYES_CLOSED = builder.nextAccessor("citizen/living/citizen_eyes_closed", (accessor -> new StaticAnimation(0.2F,true, accessor, EpicColoniesArmatures.CITIZEN_REGULAR)));
 
         CITIZEN_EYES_MOVE = builder.nextAccessor("citizen/living/citizen_eyes_move", (accessor -> new StaticAnimation(0.2F,true, accessor, EpicColoniesArmatures.CITIZEN_REGULAR)));

@@ -11,6 +11,8 @@ public class CitizenArmature extends HumanoidArmature {
     public final Joint EyeL;
     public final Joint BrowR;
     public final Joint BrowL;
+    public final Joint BrowRInner;
+    public final Joint BrowLInner;
     public final Joint Mouth;
     public final Joint MouthSmile;
 
@@ -21,6 +23,8 @@ public class CitizenArmature extends HumanoidArmature {
         this.EyeL = getOrLogException(jointMap, "Eye_L");
         this.BrowR = getOrLogException(jointMap, "Brow_R");
         this.BrowL = getOrLogException(jointMap, "Brow_L");
+        this.BrowRInner = getOrLogException(jointMap, "Brow_R_Inner");
+        this.BrowLInner = getOrLogException(jointMap, "Brow_L_Inner");
         this.Mouth = getOrLogException(jointMap, "Mouth");
         this.MouthSmile = getOrLogException(jointMap, "Mouth_Smile");
 

@@ -1,5 +1,5 @@
 {
   "joints": [
-    "Brow_R", "Brow_L"
+    "Brow_R", "Brow_L", "Brow_R_Inner", "Brow_L_Inner"
   ]
 }
