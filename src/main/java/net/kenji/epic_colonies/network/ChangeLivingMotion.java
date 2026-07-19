@@ -129,8 +129,6 @@ public class ChangeLivingMotion {
                     if (msg.setChangesAsDefault) {
                         animator.setCurrentMotionsAsDefault();
                     }
-                    Log.info("Setting Living Motion [POST]: " + livingEntityPatch.getClientAnimator().getCompositeLivingMotion(LivingMotions.IDLE));
-
                 }
             }
 

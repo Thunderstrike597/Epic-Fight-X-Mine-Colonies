@@ -27,6 +27,8 @@ import net.kenji.epic_colonies.network.ChangeLivingMotion;
 import net.kenji.epic_colonies.network.ClientCitizenSyncPacket;
 import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
 import net.kenji.epic_colonies.network.ServerBowActionPacket;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -47,6 +49,7 @@ import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.animation.Layer;
 import yesman.epicfight.api.utils.math.OpenMatrix4f;
 import yesman.epicfight.api.utils.math.Vec3f;
+import yesman.epicfight.client.world.capabilites.entitypatch.player.AbstractClientPlayerPatch;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.model.armature.HumanoidArmature;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
@@ -237,7 +240,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         AbstractEntityCitizen citizen = this.getOriginal();
 
 
-        if (citizen.getCitizenDataView() == null) {
+        if (this.getOriginal().level().isClientSide() && citizen.getCitizenDataView() == null) {
                 CitizenMeshCache.Entry cached = CitizenMeshCache.get(citizen.getUUID());
                 if (cached != null) {
                     this.getOriginal().setIsChild(cached.isChild());
@@ -254,8 +257,11 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
     @Override
     public HumanoidArmature getArmature() {
-        ICitizenData data  = this.getOriginal().getCitizenData();
-        ICitizenDataView dataView  = this.getOriginal().getCitizenDataView();
+        ICitizenData data = this.getOriginal().getCitizenData();
+        ICitizenDataView dataView = this.getOriginal().level().isClientSide()
+                ? this.getOriginal().getCitizenDataView()
+                : null;
+
         HumanoidArmature childArmature = !this.getOriginal().isFemale() ? EpicColoniesArmatures.CHILD_MALE.get() : EpicColoniesArmatures.CHILD_FEMALE.get();
 
 
@@ -418,7 +424,9 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         if (state == EntityAIEatTask.EatingState.EAT) {
             compositeMotion = LivingMotions.EAT;
         }
-
+        if((citizen.isUsingItem()) && !(citizen.getMainHandItem().getItem() instanceof ProjectileWeaponItem)){
+            compositeMotion = EpicColoniesLivingMotions.USE;
+        }
 
         if(workerState != null) {
             Pair<LivingMotion, Boolean> statePair = EpicColoniesLivingMotions.getLivingMotionFromAiState(workerState);
@@ -669,6 +677,8 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         animator.addLivingAnimation(LivingMotions.EAT, EpicColoniesAnimations.CITIZEN_EAT);
         animator.addLivingAnimation(LivingMotions.CLIMB, EpicColoniesAnimations.CITIZEN_CLIMB);
         animator.addLivingAnimation(LivingMotions.DIGGING, EpicColoniesAnimations.CITIZEN_DIG);
+        animator.addLivingAnimation(EpicColoniesLivingMotions.USE, EpicColoniesAnimations.CITIZEN_DIG);
+
         animator.addLivingAnimation(EpicColoniesLivingMotions.SIT_SLEEP, Animations.BIPED_SIT);
 
         animator.addLivingAnimation(LivingMotions.IDLE, Animations.BIPED_IDLE);

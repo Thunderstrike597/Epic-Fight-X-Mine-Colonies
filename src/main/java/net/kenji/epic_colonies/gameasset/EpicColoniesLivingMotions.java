@@ -9,6 +9,7 @@ import yesman.epicfight.api.animation.LivingMotions;
 
 public enum EpicColoniesLivingMotions implements LivingMotion {
     JOG(null, null, false),
+    USE(null, null, true),
     DIG(AIWorkerState.MINE_BLOCK, LivingMotions.DIGGING,true),
     SIT_SLEEP(AIWorkerState.GUARD_SLEEP, null, false);
 

@@ -207,8 +207,12 @@ dependencies {
 
     implementation fg.deobf("curse.maven:smooth-camera-movement-1241658:6612383")
     implementation fg.deobf("curse.maven:architectury-api-419699:5137938")
+
     implementation fg.deobf("curse.maven:ambientsounds-254284:8042994")
     implementation fg.deobf("curse.maven:creativecore-257814:8304882")
+
+    implementation fg.deobf("curse.maven:particle-rain-421897:8055453")
+
     compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"))
     compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"))
     runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
