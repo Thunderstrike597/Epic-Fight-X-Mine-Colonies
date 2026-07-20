@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "epicfight:netherite_dagger"
+    },
+    {
+      "item": "epicfight:netherite_dagger"
+    }
+  ],
+  "result": {
+    "item": "epic_colonies:netherite_dual_daggers",
+    "count": 1
+  }
+}

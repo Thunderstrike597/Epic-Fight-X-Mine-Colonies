@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "epicfight:stone_dagger"
+    },
+    {
+      "item": "epicfight:stone_dagger"
+    }
+  ],
+  "result": {
+    "item": "epic_colonies:stone_dual_daggers",
+    "count": 1
+  }
+}
