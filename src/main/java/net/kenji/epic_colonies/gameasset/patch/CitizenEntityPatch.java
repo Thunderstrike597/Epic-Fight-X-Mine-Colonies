@@ -336,13 +336,13 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         ICitizenData citizenData = !citizen.level().isClientSide() ? citizen.getCitizenData() : null;
         double happiness = 5.0;
         if(citizenDataView != null && citizen.level().isClientSide()){
-            if(citizenDataView.isChild()) return facialAnim;
+            if(citizenDataView.isChild()) return DEFAULT_BROW_ANIM;
            happiness = citizenDataView.getHappiness();
         }
         if(citizen.getCitizenColonyHandler() == null || citizen.getCitizenColonyHandler().getColony() == null) return facialAnim;
         IColony colony = citizen.getCitizenColonyHandler().getColony();
         if(citizenData != null){
-            if(citizenData.isChild()) return facialAnim;
+            if(citizenData.isChild()) return DEFAULT_BROW_ANIM;
             happiness = citizenData.getCitizenHappinessHandler().getHappiness(colony, citizenData);
         }
 

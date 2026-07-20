@@ -1,3 +1,15 @@
 {
-"creativetab.epic_colonies": "Epic Colonies"
+  "creativetab.epic_colonies": "Epic Colonies",
+
+  "item.epic_colonies.wooden_dual_swords": "Wooden Dual Swords",
+  "item.epic_colonies.stone_dual_swords": "Stone Dual Swords",
+  "item.epic_colonies.iron_dual_swords": "Iron Dual Swords",
+  "item.epic_colonies.diamond_dual_swords": "Diamond Dual Swords",
+  "item.epic_colonies.netherite_dual_swords": "Netherite Dual Swords",
+
+  "item.epic_colonies.wooden_dual_daggers": "Wooden Dual Daggers",
+  "item.epic_colonies.stone_dual_daggers": "Stone Dual Daggers",
+  "item.epic_colonies.iron_dual_daggers": "Iron Dual Daggers",
+  "item.epic_colonies.diamond_dual_daggers": "Diamond Dual Daggers",
+  "item.epic_colonies.netherite_dual_daggers": "Netherite Dual Daggers"
 }
