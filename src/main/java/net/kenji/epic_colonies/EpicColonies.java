@@ -1,6 +1,5 @@
 package net.kenji.epic_colonies;
 
-import com.minecolonies.core.client.model.MaleForesterModel;
 import com.mojang.logging.LogUtils;
 
 import net.kenji.epic_colonies.client.events.EpicFightClientEvents;
@@ -10,8 +9,12 @@ import net.kenji.epic_colonies.compat.wom.WomCombatBehaviours;
 import net.kenji.epic_colonies.events.ModEvents;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
+import net.kenji.epic_colonies.gameasset.EpicColoniesWeaponCapabilityPresets;
+import net.kenji.epic_colonies.item.EpicColoniesItems;
 import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
+import net.kenji.epic_colonies.tab.EpicColoniesTab;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -24,8 +27,10 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import yesman.epicfight.api.animation.LivingMotions;
+import yesman.epicfight.api.forgeevent.WeaponCapabilityPresetRegistryEvent;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(EpicColonies.MODID)
@@ -36,15 +41,24 @@ public class EpicColonies {
     // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
 
+    public static @NotNull ResourceLocation identifier(@NotNull String path) {
+        return ResourceLocation.fromNamespaceAndPath(MODID, path);
+    }
 
     public EpicColonies() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         // Register the commonSetup method for modloading
+
+        EpicColoniesItems.register(modEventBus);
+        EpicColoniesTab.register(modEventBus);
+
         modEventBus.addListener(ModEvents::registerPatchedEntities);
         modEventBus.addListener(EpicColoniesAnimations::registerAnimations);
 
         modEventBus.addListener(ModEvents::commonSetup);
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(EpicColonies::registerWeaponType);
+
         // Register ourselves for server and other game events we are interested in
         LivingMotions.ENUM_MANAGER.registerEnumCls(MODID, EpicColoniesLivingMotions.class);
         MinecraftForge.EVENT_BUS.register(this);
@@ -55,7 +69,10 @@ public class EpicColonies {
 
 
     }
-
+    public static void registerWeaponType(WeaponCapabilityPresetRegistryEvent event) {
+        event.getTypeEntry().put(new ResourceLocation(MODID, "dual_swords"), EpicColoniesWeaponCapabilityPresets.DUAL_SWORDS);
+        event.getTypeEntry().put(new ResourceLocation(MODID, "dual_daggers"), EpicColoniesWeaponCapabilityPresets.DUAL_DAGGERS);
+    }
     public static void initWeaponMotions(){
         CompatMobCombatBehaviours.initEpicFightWeaponMotions();
 

@@ -83,7 +83,7 @@ public class ChangeLivingMotion {
                 animationList.add(AnimationManager.byId(buf.readInt()));
             } catch (NoSuchElementException e) {
                 e.printStackTrace();
-                animationList.add(Animations.EMPTY_ANIMATION);
+                animationList.add(Animations.BIPED_IDLE);
             }
         }
 

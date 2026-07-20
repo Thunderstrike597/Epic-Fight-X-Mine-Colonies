@@ -4,6 +4,7 @@ package net.kenji.epic_colonies.compat.cd_moveset;
 import net.corruptdog.cdm.gameasset.CorruptAnimations;
 import net.kenji.epic_colonies.compat.CombatBehaviourBase;
 import net.kenji.epic_colonies.compat.CompatMobCombatBehaviours;
+import net.kenji.epic_colonies.gameasset.EpicColoniesWeaponCategory;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.gameasset.MobCombatBehaviors;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
@@ -31,14 +32,21 @@ public class CdMovesetCombatBehaviours extends CombatBehaviourBase {
         CompatMobCombatBehaviours.HUMANOID_S_SWORD = register(
                 CapabilityItem.WeaponCategories.SWORD,
                 CompatMobCombatBehaviours.motion(CapabilityItem.Styles.ONE_HAND, swordSBehaviour, Animations.BIPED_HOLD_LONGSWORD, Animations.BIPED_WALK, Animations.BIPED_RUN),
-                CompatMobCombatBehaviours.motion(CapabilityItem.Styles.TWO_HAND, MobCombatBehaviors.HUMANOID_DUAL_SWORD, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_RUN_DUAL)
+                CompatMobCombatBehaviours.motion(CapabilityItem.Styles.TWO_HAND, CompatMobCombatBehaviours.swordDualBehaviour, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_RUN_DUAL)
         );
-
+        CompatMobCombatBehaviours.HUMANOID_S_DAGGER_DUAL = register(
+                EpicColoniesWeaponCategory.DUAL_SWORDS,
+                CompatMobCombatBehaviours.motion(CapabilityItem.Styles.TWO_HAND, CompatMobCombatBehaviours.swordDualBehaviour, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_RUN_DUAL)
+        );
         CompatMobCombatBehaviours.HUMANOID_S_DAGGER = register(
                 CapabilityItem.WeaponCategories.DAGGER,
-                CompatMobCombatBehaviours.motion(CapabilityItem.Styles.ONE_HAND, MobCombatBehaviors.HUMANOID_ONEHAND_DAGGER, Animations.BIPED_IDLE, Animations.BIPED_WALK, Animations.BIPED_HOLD_SPEAR, Animations.BIPED_RUN),
+                CompatMobCombatBehaviours.motion(CapabilityItem.Styles.ONE_HAND, CompatMobCombatBehaviours.daggerBehaviour, Animations.BIPED_IDLE, Animations.BIPED_WALK, Animations.BIPED_HOLD_SPEAR, Animations.BIPED_RUN),
                 CompatMobCombatBehaviours.motion(CapabilityItem.Styles.TWO_HAND, daggerDualSBehaviour, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_RUN_DUAL)
                 );
+        CompatMobCombatBehaviours.HUMANOID_S_DAGGER_DUAL = register(
+                EpicColoniesWeaponCategory.DUAL_DAGGER,
+                CompatMobCombatBehaviours.motion(CapabilityItem.Styles.TWO_HAND, daggerDualSBehaviour, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_HOLD_DUAL_WEAPON, Animations.BIPED_RUN_DUAL)
+        );
         CompatMobCombatBehaviours.HUMANOID_S_TACHI = register(
                 CapabilityItem.WeaponCategories.TACHI,
                 CompatMobCombatBehaviours.motion(CapabilityItem.Styles.TWO_HAND, tachiSBehaviour, Animations.BIPED_HOLD_TACHI, Animations.BIPED_HOLD_TACHI, Animations.BIPED_RUN_SPEAR)
@@ -84,17 +92,17 @@ public class CdMovesetCombatBehaviours extends CombatBehaviourBase {
                 createBehaviourSeries(40, DynamicBehaviour.of(Animations.BIPED_STEP_RIGHT).distanceMinMax(0, 1.8F).build())
         );
         daggerDualSBehaviour = CombatBehaviors.builder().newBehaviorSeries(
-                createBehaviourSeries(30, DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO1).distanceMinMax(1, 3).build())
+                createBehaviourSeries(30, DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO1).distanceMinMax(1, 2).build())
         ).newBehaviorSeries(
-                createBehaviourSeries(30, DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO2).distanceMinMax(1, 3).build())
+                createBehaviourSeries(30, DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO2).distanceMinMax(1, 2).build())
         ).newBehaviorSeries(
-                createBehaviourSeries(30, DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO3).distanceMinMax(1, 3).build())
+                createBehaviourSeries(30, DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO3).distanceMinMax(1, 2).build())
         ).newBehaviorSeries(
-                createBehaviourSeries(22, DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO1).distanceMinMax(1, 3).build(), DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO2).distanceMinMax(1, 3).build())
+                createBehaviourSeries(22, DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO1).distanceMinMax(1, 2).build(), DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO2).distanceMinMax(1, 3).build())
         ).newBehaviorSeries(
-                createBehaviourSeries(14, DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO1).distanceMinMax(1, 3).build(), DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO2).distanceMinMax(1, 3).build(), DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO3).distanceMinMax(1, 3).build())
+                createBehaviourSeries(14, DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO1).distanceMinMax(1, 2).build(), DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO2).distanceMinMax(1, 3).build(), DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO3).distanceMinMax(1, 3).build())
         ).newBehaviorSeries(
-                createBehaviourSeries(8, DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO1).distanceMinMax(1, 3).build(), DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO2).distanceMinMax(1, 3).build(), DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO3).distanceMinMax(1, 3).build(), DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO4).distanceMinMax(1, 3).build())
+                createBehaviourSeries(8, DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO1).distanceMinMax(1, 2).build(), DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO2).distanceMinMax(1, 3).build(), DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO3).distanceMinMax(1, 3).build(), DynamicBehaviour.of(CorruptAnimations.DAGGER_DUAL_AUTO4).distanceMinMax(1, 3).build())
         ).newBehaviorSeries(
                 createBehaviourSeries(40, DynamicBehaviour.of(Animations.BIPED_ROLL_BACKWARD).distanceMinMax(0, 1.5F).build())
         ).newBehaviorSeries(

@@ -302,21 +302,22 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
         return this.getOriginal().isSleeping() || this.original.getCitizenSleepHandler().isAsleep() || citizenPatchData.isAsleep || this.citizenPatchData.currentOptionalMotion == EpicColoniesLivingMotions.SIT_SLEEP;
     }
 
-    public void tickEyesAnim(){
+    public void tickFacialAnim(){
         if(isCitizenAsleep())
             this.facialAnim = EpicColoniesAnimations.CITIZEN_EYES_CLOSED;
-        else this.facialAnim = DEFAULT_BROW_ANIM;
+        else {
+            AnimationManager.AnimationAccessor<? extends StaticAnimation> newFacialAnim = getFacialBrowAnimation();
+
+            if(facialAnim != newFacialAnim){
+                this.facialAnim = newFacialAnim;
+            }
+        }
     }
 
     private void onCitizenTick(){
-        tickEyesAnim();
+        tickFacialAnim();
         setSleepDir();
         handleHeldItem();
-        AnimationManager.AnimationAccessor<? extends StaticAnimation> newFacialAnim = getFacialBrowAnimation();
-
-        if(facialAnim != newFacialAnim){
-            facialAnim = newFacialAnim;
-        }
 
         if(!this.isLogicalClient()) {
             tickCurrentOptionalMotion();
@@ -675,7 +676,7 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
 
         playCompositeOptionalAnimation();
         tryStopAnim(LivingMotions.CLIMB);
-
+        tryStopAnim(LivingMotions.DIGGING);
     }
 
     private void tryStopAnim(LivingMotion motion) {
