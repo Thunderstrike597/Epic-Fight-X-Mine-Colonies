@@ -32,21 +32,5 @@ public class RenderBipedCitizenMixin {
                 }
             }
         }
-        /// SKIN DEBUG BELOW
-       /*else{
-            IJobView jobView = entity.getCitizenDataView().getJobView();
-            if(jobView != null){
-                if(jobView.getEntry() == ModJobs.archer.get()){
-                    if(entity.isFemale()){
-                        ResourceLocation location = new ResourceLocation("minecolonies", "textures/entity/citizen/medieval/archerfemale1_d.png");
-                        if(location == null) {
-                            Log.info("Texture Loc Null!");
-                            return;
-                        }
-                        cir.setReturnValue(location);
-                    }
-                }
-            }
-        }*/
     }
 }
