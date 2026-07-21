@@ -5,6 +5,6 @@ import yesman.epicfight.world.item.WeaponItem;
 
 public class DualWeaponItem extends WeaponItem {
     public DualWeaponItem(Tier tier, int damageIn, float speedIn, Properties builder) {
-        super(tier, damageIn, speedIn, builder);
+        super(builder);
     }
 }

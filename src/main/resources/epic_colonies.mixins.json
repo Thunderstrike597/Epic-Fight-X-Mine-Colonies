@@ -2,9 +2,8 @@
   "required": true,
   "minVersion": "0.8",
   "package": "net.kenji.epic_colonies.mixins",
-  "compatibilityLevel": "JAVA_8",
-  "refmap": "epic_colonies.refmap.json",
-  "mixins": [
+  "compatibilityLevel": "JAVA_21",
+    "mixins": [
     "MixinAttackMoveAi",
     "MobPatchMixin",
     "AccessorTargetAi",

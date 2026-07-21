@@ -3,15 +3,11 @@ package net.kenji.epic_colonies.client.events;
 import net.kenji.epic_colonies.EpicColonies;
 import net.kenji.epic_colonies.api.MobPatchFactory;
 import net.kenji.epic_colonies.client.render.item_render.DualSwordsRender;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import yesman.epicfight.api.client.forgeevent.PatchedRenderersEvent;
+import yesman.epicfight.api.client.event.types.registry.RegisterPatchedRenderersEvent;
 
-@Mod.EventBusSubscriber(modid = EpicColonies.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class EpicFightClientEvents {
 
-    public static void registerPatchedEntityRenderers(PatchedRenderersEvent.Add event) {
+    public static void registerPatchedEntityRenderers(RegisterPatchedRenderersEvent.AddEntity event) {
         for (MobPatchFactory.MobPatchDefinitions def : MobPatchFactory.mobPatches) {
             event.addPatchedEntityRenderer(
                     def.entityType,
@@ -19,10 +15,8 @@ public class EpicFightClientEvents {
             );
         }
     }
-    @SubscribeEvent
-    public static void registerRenderer(PatchedRenderersEvent.RegisterItemRenderer event) {
+    
+    public static void registerRenderer(RegisterPatchedRenderersEvent.Item event) {
         event.addItemRenderer(EpicColonies.identifier("dual_weapon"), DualSwordsRender::new);
-
     }
-
 }

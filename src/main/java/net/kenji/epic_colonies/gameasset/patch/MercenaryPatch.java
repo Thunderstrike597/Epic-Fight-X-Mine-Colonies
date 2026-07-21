@@ -11,7 +11,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.entity.living.LivingEvent;
+import net.neoforged.neoforge.event.entity.living.LivingEvent;
 import yesman.epicfight.api.animation.*;
 import yesman.epicfight.api.animation.types.StaticAnimation;
 import yesman.epicfight.api.client.animation.Layer;
@@ -33,8 +33,8 @@ import java.util.Set;
 
 public class MercenaryPatch<E extends PathfinderMob> extends HumanoidMobPatch<PathfinderMob> {
 
-    public MercenaryPatch() {
-        super(Factions.VILLAGER);
+    public MercenaryPatch(PathfinderMob entity) {
+        super(entity, Factions.VILLAGER);
     }
 
     public static int MAX_BLINK_COUNTER = 20 * 20;
@@ -45,8 +45,8 @@ public class MercenaryPatch<E extends PathfinderMob> extends HumanoidMobPatch<Pa
     }
 
     @Override
-    public void onAddedToWorld() {
-        super.onAddedToWorld();
+    public void onAddedToLevel() {
+        super.onAddedToLevel();
         animator.playAnimation(EpicColoniesAnimations.CITIZEN_BLINK, 0F);
         animator.playAnimation(EpicColoniesAnimations.CITIZEN_EYES_MOVE, 0F);
 
@@ -108,8 +108,8 @@ public class MercenaryPatch<E extends PathfinderMob> extends HumanoidMobPatch<Pa
     }
 
     @Override
-    protected void clientTick(LivingEvent.LivingTickEvent event) {
-        super.clientTick(event);
+    public void preTickClient() {
+        super.preTickClient();
         AnimationPlayer highestAnimPlayer = this.getClientAnimator().getCompositeLayer(Layer.Priority.HIGHEST).animationPlayer;
         AnimationPlayer middleAnimPlayer = this.getClientAnimator().getCompositeLayer(Layer.Priority.MIDDLE).animationPlayer;
 

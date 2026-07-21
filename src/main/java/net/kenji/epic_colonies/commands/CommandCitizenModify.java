@@ -12,7 +12,7 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import net.minecraft.commands.CommandRuntimeException;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -77,13 +77,7 @@ public class CommandCitizenModify {
             if (!(sender instanceof Player)) {
                 return false;
             } else {
-                IColony colony;
-                try {
-                    colony = ColonyIdArgument.getColony(context, "colonyID");
-                } catch (CommandRuntimeException var5) {
-                    return false;
-                }
-
+                IColony colony = ColonyIdArgument.getColony(context, "colonyID");
                 return IMCCommand.isPlayerOped((Player)sender) || colony.getPermissions().getRank((Player)sender).isColonyManager();
             }
         }

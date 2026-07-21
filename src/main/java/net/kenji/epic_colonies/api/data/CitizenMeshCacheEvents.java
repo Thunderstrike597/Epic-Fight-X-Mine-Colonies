@@ -1,13 +1,13 @@
 package net.kenji.epic_colonies.api.data;
 
 import net.kenji.epic_colonies.EpicColonies;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 
-@Mod.EventBusSubscriber(modid = EpicColonies.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = EpicColonies.MODID, value = Dist.CLIENT)
 public class CitizenMeshCacheEvents {
     private static int saveTimer = 0;
 
@@ -22,9 +22,7 @@ public class CitizenMeshCacheEvents {
     }
 
     @SubscribeEvent
-    public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
-
+    public static void onClientTick(ClientTickEvent.Post event) {
         if (++saveTimer >= 600) { // every 30s at 20 tps
             saveTimer = 0;
             CitizenMeshCache.save(); // no-op if not dirty

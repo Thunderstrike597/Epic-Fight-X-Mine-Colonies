@@ -41,7 +41,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.entity.living.LivingEvent;
+import net.neoforged.neoforge.event.entity.living.LivingEvent;
 import yesman.epicfight.api.animation.*;
 import yesman.epicfight.api.animation.types.DynamicAnimation;
 import yesman.epicfight.api.animation.types.StaticAnimation;
@@ -78,8 +78,8 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     private ItemStack lastHeldItem = ItemStack.EMPTY;
     public boolean wasUsingBow = false;
     public int bowUseCounter = 0;
-    public CitizenEntityPatch() {
-        super(Factions.VILLAGER);
+    public CitizenEntityPatch(AbstractEntityCitizen entity) {
+        super(entity, Factions.VILLAGER);
     }
     public boolean didJump = false;
 
@@ -208,8 +208,8 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
 
     @Override
-    public void tick(LivingEvent.LivingTickEvent event) {
-        super.tick(event);
+    public void preTick() {
+        super.preTick();
 
         if(lastY == -1 || lastYTickCount <= 0){
             lastY = this.getOriginal().position().y();
@@ -239,8 +239,8 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
 
     @Override
-    public void onAddedToWorld() {
-        super.onAddedToWorld();
+    public void onAddedToLevel() {
+        super.onAddedToLevel();
         DEFAULT_BROW_ANIM = EpicColoniesAnimations.CITIZEN_BLINK;
         DEFAULT_EYES_ANIM = EpicColoniesAnimations.CITIZEN_EYES_MOVE;
 
@@ -369,8 +369,8 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
 
     @Override
-    public void serverTick(LivingEvent.LivingTickEvent event) {
-        super.serverTick(event); // already dispatches to clientTick()/serverTick() internally, including onCitizenTick() on the client
+    public void preTickServer() {
+        super.preTickServer(); // already dispatches to clientTick()/serverTick() internally, including onCitizenTick() on the client
         onCitizenTick(); // only need to run it here for the server, since clientTick() already covers the client path
         manageHeadRotWithEyes();
         if(wasUsingBow && this.getCurrentLivingMotion() != EpicColoniesLivingMotions.JOG){
@@ -666,8 +666,8 @@ public class CitizenEntityPatch<E extends AbstractEntityCitizen> extends Humanoi
     }
 
     @Override
-    protected void clientTick(LivingEvent.LivingTickEvent event) {
-        super.clientTick(event);
+    public void preTickClient() {
+        super.preTickClient();
 
         onCitizenTick();
 

@@ -5,15 +5,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.function.Supplier;
+import net.kenji.epic_colonies.EpicColonies;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.network.NetworkEvent;
-import org.jline.utils.Log;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import yesman.epicfight.api.animation.AnimationManager;
 import yesman.epicfight.api.animation.LivingMotion;
-import yesman.epicfight.api.animation.LivingMotions;
 import yesman.epicfight.api.animation.types.StaticAnimation;
 import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.animation.ClientAnimator;
@@ -21,7 +22,14 @@ import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 
-public class ChangeLivingMotion {
+public class ChangeLivingMotion implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<ChangeLivingMotion> TYPE = new CustomPacketPayload.Type<>(EpicColonies.identifier("change_living_motion"));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, ChangeLivingMotion> STREAM_CODEC = StreamCodec.of(
+            ChangeLivingMotion::toBytes,
+            ChangeLivingMotion::fromBytes
+    );
+
     private final int entityId;
     private int count;
     private final boolean setChangesAsDefault;
@@ -46,6 +54,11 @@ public class ChangeLivingMotion {
         this.entityId = entityId;
         this.count = count;
         this.setChangesAsDefault = setChangesAsDefault;
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
     public ChangeLivingMotion putPair(LivingMotion motion, AssetAccessor<? extends StaticAnimation> animation) {
@@ -92,7 +105,7 @@ public class ChangeLivingMotion {
         return msg;
     }
 
-    public static void toBytes(ChangeLivingMotion msg, FriendlyByteBuf buf) {
+    public static void toBytes(FriendlyByteBuf buf, ChangeLivingMotion msg) {
         buf.writeInt(msg.entityId);
         buf.writeInt(msg.count);
         buf.writeBoolean(msg.setChangesAsDefault);
@@ -104,16 +117,15 @@ public class ChangeLivingMotion {
         for(AssetAccessor<? extends StaticAnimation> anim : msg.animationList) {
             buf.writeInt(((StaticAnimation)anim.get()).getId());
         }
-
     }
 
-    public static void handle(ChangeLivingMotion msg, Supplier<NetworkEvent.Context> ctx) {
-        ((NetworkEvent.Context)ctx.get()).enqueueWork(() -> {
+    public static void handle(final ChangeLivingMotion msg, final IPayloadContext context) {
+        context.enqueueWork(() -> {
             Minecraft mc = Minecraft.getInstance();
             Entity entity = mc.player.level().getEntity(msg.entityId);
             if (entity != null) {
-                Object patt3767$temp = entity.getCapability(EpicFightCapabilities.CAPABILITY_ENTITY).orElse(null);
-                if (patt3767$temp instanceof LivingEntityPatch<?> livingEntityPatch) {
+                LivingEntityPatch<?> livingEntityPatch = EpicFightCapabilities.getUnparameterizedEntityPatch(entity, LivingEntityPatch.class).orElse(null);
+                if (livingEntityPatch != null) {
                     ClientAnimator animator = livingEntityPatch.getClientAnimator();
                     animator.resetLivingAnimations();
                     animator.offAllLayers();
@@ -121,9 +133,8 @@ public class ChangeLivingMotion {
                     animator.resetCompositeMotion();
 
                     for (int i = 0; i < msg.count; ++i) {
-
                         LivingMotion decoded = msg.motionList.get(i);
-                            livingEntityPatch.getClientAnimator().addLivingAnimation(decoded, msg.animationList.get(i));
+                        livingEntityPatch.getClientAnimator().addLivingAnimation(decoded, msg.animationList.get(i));
                     }
 
                     if (msg.setChangesAsDefault) {
@@ -131,8 +142,6 @@ public class ChangeLivingMotion {
                     }
                 }
             }
-
         });
-        ((NetworkEvent.Context)ctx.get()).setPacketHandled(true);
     }
 }

@@ -12,25 +12,21 @@ import net.kenji.epic_colonies.gameasset.armatures.CitizenArmature;
 import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
 import net.kenji.epic_colonies.network.ServerBowActionPacket;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ProjectileWeaponItem;
-import net.minecraft.world.item.SwordItem;
-import net.minecraft.world.item.UseAnim;
-import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraft.world.item.Tiers;
+import net.minecraft.sounds.SoundEvent;
 import yesman.epicfight.api.animation.*;
 import yesman.epicfight.api.animation.types.StaticAnimation;
 import yesman.epicfight.api.client.animation.Layer;
 import yesman.epicfight.gameasset.Animations;
-import yesman.epicfight.gameasset.MobCombatBehaviors;
+import yesman.epicfight.registry.entries.EpicFightSounds;
 import yesman.epicfight.model.armature.HumanoidArmature;
-import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
 import yesman.epicfight.world.capabilities.item.Style;
 import yesman.epicfight.world.capabilities.item.WeaponCategory;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
-import yesman.epicfight.world.item.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,8 +34,8 @@ import java.util.Set;
 
 public class MinecoloniesMonsterPatch<E extends AbstractEntityMinecoloniesMonster> extends HumanoidMobPatch<AbstractEntityMinecoloniesMonster> {
 
-    public MinecoloniesMonsterPatch() {
-        super(Factions.VILLAGER);
+    public MinecoloniesMonsterPatch(AbstractEntityMinecoloniesMonster entity) {
+        super(entity, Factions.VILLAGER);
     }
 
     public static int MAX_BLINK_COUNTER = 20 * 20;
@@ -59,8 +55,8 @@ public class MinecoloniesMonsterPatch<E extends AbstractEntityMinecoloniesMonste
         }
     }
     @Override
-    public void onAddedToWorld() {
-        super.onAddedToWorld();
+    public void onAddedToLevel() {
+        super.onAddedToLevel();
         animator.playAnimation(EpicColoniesAnimations.CITIZEN_BLINK, 0F);
         animator.playAnimation(EpicColoniesAnimations.CITIZEN_EYES_MOVE, 0F);
 
@@ -115,8 +111,8 @@ public class MinecoloniesMonsterPatch<E extends AbstractEntityMinecoloniesMonste
     }
 
     @Override
-    protected void serverTick(LivingEvent.LivingTickEvent event) {
-        super.serverTick(event);
+    public void preTickServer() {
+        super.preTickServer();
         if(wasUsingBow && this.getCurrentLivingMotion() != EpicColoniesLivingMotions.JOG){
             bowUseCounter++;
         }
@@ -126,8 +122,8 @@ public class MinecoloniesMonsterPatch<E extends AbstractEntityMinecoloniesMonste
     }
 
     @Override
-    protected void clientTick(LivingEvent.LivingTickEvent event) {
-        super.clientTick(event);
+    public void preTickClient() {
+        super.preTickClient();
         AnimationPlayer highestAnimPlayer = this.getClientAnimator().getCompositeLayer(Layer.Priority.HIGHEST).animationPlayer;
         AnimationPlayer middleAnimPlayer = this.getClientAnimator().getCompositeLayer(Layer.Priority.MIDDLE).animationPlayer;
 

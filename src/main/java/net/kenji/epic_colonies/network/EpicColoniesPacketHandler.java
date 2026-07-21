@@ -1,60 +1,50 @@
 package net.kenji.epic_colonies.network;
 
 import net.kenji.epic_colonies.EpicColonies;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
+@EventBusSubscriber(modid = EpicColonies.MODID, bus = EventBusSubscriber.Bus.MOD)
 public class EpicColoniesPacketHandler {
-    private static final String PROTOCOL_VERSION = "1";
 
-    public static final SimpleChannel INSTANCE = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(EpicColonies.MODID, "main"),
-            () -> PROTOCOL_VERSION,
-            PROTOCOL_VERSION::equals,
-            PROTOCOL_VERSION::equals
-    );
+    @SubscribeEvent
+    public static void register(final RegisterPayloadHandlersEvent event) {
+        final PayloadRegistrar registrar = event.registrar("1");
 
-    private static int packetId = 0;
+        // Server to Client
+        registrar.playToClient(
+                ClientCitizenSyncPacket.TYPE,
+                ClientCitizenSyncPacket.STREAM_CODEC,
+                ClientCitizenSyncPacket::handle
+        );
+        registrar.playToClient(
+                ChangeLivingMotion.TYPE,
+                ChangeLivingMotion.STREAM_CODEC,
+                ChangeLivingMotion::handle
+        );
 
-    private static int id() {
-        return packetId++;
+        // Client to Server
+        registrar.playToServer(
+                ServerBowActionPacket.TYPE,
+                ServerBowActionPacket.STREAM_CODEC,
+                ServerBowActionPacket::handle
+        );
     }
 
-    public static void register() {
-
-        INSTANCE.messageBuilder(ClientCitizenSyncPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(ClientCitizenSyncPacket::decode)
-                .encoder(ClientCitizenSyncPacket::encode)
-                .consumerMainThread(ClientCitizenSyncPacket::handle)
-                .add();
-        INSTANCE.messageBuilder(ChangeLivingMotion.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(ChangeLivingMotion::fromBytes)
-                .encoder(ChangeLivingMotion::toBytes)
-                .consumerMainThread(ChangeLivingMotion::handle)
-                .add();
-        INSTANCE.messageBuilder(ServerBowActionPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(ServerBowActionPacket::decode)
-                .encoder(ServerBowActionPacket::encode)
-                .consumerMainThread(ServerBowActionPacket::handle)
-                .add();
+    public static void sendToServer(CustomPacketPayload packet) {
+        PacketDistributor.sendToServer(packet);
     }
 
-    // Helper method to send packet to server
-    public static void sendToServer(Object packet) {
-        INSTANCE.sendToServer(packet);
+    public static void sendToPlayer(CustomPacketPayload packet, ServerPlayer player) {
+        PacketDistributor.sendToPlayer(player, packet);
     }
 
-    // Helper method to send packet to specific player
-    public static void sendToPlayer(Object packet, ServerPlayer player) {
-        INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), packet);
-    }
-
-    // Helper method to send packet to all players
-    public static void sendToAll(Object packet) {
-        INSTANCE.send(PacketDistributor.ALL.noArg(), packet);
+    public static void sendToAll(CustomPacketPayload packet) {
+        PacketDistributor.sendToAllPlayers(packet);
     }
 }

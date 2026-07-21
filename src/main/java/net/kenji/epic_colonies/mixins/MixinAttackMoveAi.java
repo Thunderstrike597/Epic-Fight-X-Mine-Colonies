@@ -37,7 +37,7 @@ public abstract class MixinAttackMoveAi {
 
     @Unique Mob mobSelf;
 
-    @Inject(method = "<init>", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "<init>", at = @At("RETURN"))
     public void onInit(Mob owner, ITickRateStateMachine stateMachine, CallbackInfo ci){
         mobSelf = owner;
     }
@@ -55,7 +55,7 @@ public abstract class MixinAttackMoveAi {
                 if (selfMob.getUser().getSensing().hasLineOfSight(selfMob.getUser().getTarget())) {
                     this.pathAttempts = 0;
                     selfMob.getUser().getLookControl().setLookAt(selfMob.getUser().getTarget());
-                    if(!mobSelf.getCapability(EpicFightCapabilities.CAPABILITY_ENTITY).isPresent()) {
+                    if(!EpicFightCapabilities.getUnparameterizedEntityPatch(mobSelf, yesman.epicfight.world.capabilities.entitypatch.EntityPatch.class).isPresent()) {
                         this.doAttack(this.mobSelf.getTarget());
                         this.nextAttackTime = selfMob.getUser().level().getGameTime() + (long) this.getAttackDelay();
                     }

@@ -7,8 +7,7 @@ import com.minecolonies.api.colony.jobs.registry.IJobRegistry;
 import com.minecolonies.api.colony.jobs.registry.JobEntry;
 import net.kenji.epic_colonies.EpicColonies;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.registries.ForgeRegistries; // adjust to wherever JobEntry's registry actually lives
+import net.neoforged.fml.loading.FMLPaths;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -79,22 +78,18 @@ public final class CitizenMeshCache {
     @Nullable
     public static JobEntry resolveJob(@Nullable String jobId) {
         if (jobId == null) return null;
-        // Swap this for whatever MineColonies actually exposes, e.g.
-        // MinecoloniesAPIProxy.getInstance().getJobRegistry().getValue(new ResourceLocation(jobId));
-        return IJobRegistry.getInstance().getValue(new ResourceLocation(jobId));
+        return IJobRegistry.getInstance().get(ResourceLocation.parse(jobId));
     }
     @Nullable
     public static ResourceLocation resolveTextLocation(@Nullable String jobId) {
         if (!isValidTexture(jobId)) return null;
-        // Swap this for whatever MineColonies actually exposes, e.g.
-        // MinecoloniesAPIProxy.getInstance().getJobRegistry().getValue(new ResourceLocation(jobId));
-        return new ResourceLocation(jobId);
+        return ResourceLocation.parse(jobId);
     }
 
     public static boolean isValidTexture(@Nullable String textureStr) {
         return textureStr != null
-                && textureStr.contains(":")           // rules out bare "0" (no namespace separator)
-                && !textureStr.endsWith(":0")          // rules out "minecraft:0" specifically
+                && textureStr.contains(":")           // rules out bare 0 (no namespace separator)
+                && !textureStr.endsWith(":0")          // rules out minecraft:0 specifically
                 && !textureStr.equals("minecraft:0");
     }
 }

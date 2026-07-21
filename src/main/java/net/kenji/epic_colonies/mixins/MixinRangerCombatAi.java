@@ -9,20 +9,22 @@ import com.minecolonies.api.util.SoundUtils;
 import com.minecolonies.core.colony.buildings.AbstractBuildingGuards;
 import com.minecolonies.core.entity.ai.combat.CombatUtils;
 import com.minecolonies.core.entity.ai.workers.guard.AbstractEntityAIGuard;
-import com.minecolonies.core.entity.ai.workers.guard.RangerCombatAI;
+import com.minecolonies.core.entity.ai.workers.guard.RangeCombatAI;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.pathfinding.navigation.EntityNavigationUtils;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
-import net.kenji.epic_colonies.gameasset.patch.MinecoloniesMonsterPatch;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
-import org.jline.utils.Log;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -32,7 +34,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 
-@Mixin(value = RangerCombatAI.class, remap = false)
+@Mixin(value = RangeCombatAI.class, remap = false)
 public abstract class MixinRangerCombatAi {
 
     @Shadow
@@ -50,7 +52,7 @@ public abstract class MixinRangerCombatAi {
 
     @Unique Mob mobSelf;
 
-    @Inject(method = "<init>", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "<init>", at = @At("RETURN"))
     public void onInit(EntityCitizen owner, ITickRateStateMachine stateMachine, AbstractEntityAIGuard parentAI, CallbackInfo ci){
         mobSelf = owner;
     }
@@ -75,36 +77,38 @@ public abstract class MixinRangerCombatAi {
             ++amountOfArrows;
         }
 
+        Registry<Enchantment> enchantmentRegistry = mobSelf.level().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+        Holder<Enchantment> flame = enchantmentRegistry.getHolderOrThrow(Enchantments.FLAME);
+        Holder<Enchantment> punch = enchantmentRegistry.getHolderOrThrow(Enchantments.PUNCH);
+
         for (int i = 0; i < amountOfArrows; ++i) {
             AbstractArrow arrow = CombatUtils.createArrowForShooter(this.mobSelf);
             if (((EntityCitizen) this.mobSelf).getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(ResearchConstants.ARROW_PIERCE) > (double) 0.0F) {
-                arrow.setPierceLevel((byte) 2);
+                ((AccessorAbstractArrow) arrow).invokeSetPierceLevel((byte) 2);
             }
 
             ItemStack bow = ((EntityCitizen) this.mobSelf).getItemInHand(InteractionHand.MAIN_HAND);
-            if (EnchantmentHelper.getItemEnchantmentLevel(Enchantments.FLAMING_ARROWS, bow) > 0) {
-                arrow.setSecondsOnFire(5);
+            if (EnchantmentHelper.getItemEnchantmentLevel(flame, bow) > 0) {
+                arrow.igniteForSeconds(5); // Standard 1.21.1 entity ignition method
             }
 
-            int k = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.PUNCH_ARROWS, bow);
+            int k = EnchantmentHelper.getItemEnchantmentLevel(punch, bow);
             if (k > 0) {
-                arrow.setKnockback(k);
+                ((AccessorAbstractArrow) arrow).setKnockback(k); // Write to the private knockback field directly!
             }
 
             double damage = this.calculateDamage(arrow);
             arrow.setBaseDamage(damage);
             float chance = 15.0F / (float) (((EntityCitizen) this.mobSelf).getCitizenData().getCitizenSkillHandler().getLevel(Skill.Adaptability) + 1);
-            mobSelf.getCapability(EpicFightCapabilities.CAPABILITY_ENTITY).ifPresent((cap) ->{
-                if(cap instanceof CitizenEntityPatch<?> entityPatch) {
-                    if(entityPatch.wasUsingBow && entityPatch.bowUseCounter >= 32) {
-                        CombatUtils.shootArrow(arrow, target, chance);
-                        ((EntityCitizen) this.mobSelf).playSound(SoundEvents.SKELETON_SHOOT, 1.0F, (float) SoundUtils.getRandomPitch(((EntityCitizen) this.mobSelf).getRandom()));
-                        entityPatch.setWasUsingBow(false);
-                        entityPatch.bowUseCounter = 0;
-                    }
+            
+            EpicFightCapabilities.getUnparameterizedEntityPatch(mobSelf, CitizenEntityPatch.class).ifPresent((cap) -> {
+                if(cap.wasUsingBow && cap.bowUseCounter >= 32) {
+                    CombatUtils.shootArrow(arrow, target, chance);
+                    ((EntityCitizen) this.mobSelf).playSound(SoundEvents.SKELETON_SHOOT, 1.0F, (float) SoundUtils.getRandomPitch(((EntityCitizen) this.mobSelf).getRandom()));
+                    cap.setWasUsingBow(false);
+                    cap.bowUseCounter = 0;
                 }
             });
-
         }
     }
 }

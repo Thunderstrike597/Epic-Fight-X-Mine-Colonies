@@ -5,6 +5,7 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -27,14 +28,16 @@ public interface AccessorWearableItemLayer<E extends LivingEntity, T extends Liv
 
     @Invoker("getArmorModel")
     SkinnedMesh invokeGetArmorModel(HumanoidArmorLayer<E, M, M> originalRenderer, M originalModel, Model forgeHooksArmorModel, E entityliving, ArmorItem armorItem, ItemStack itemstack, EquipmentSlot slot);
+    
     @Invoker("renderArmor")
     void invokeRenderArmor(PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight, SkinnedMesh model, Armature armature, float r, float g, float b, ResourceLocation armorTexture, OpenMatrix4f[] poses);
+    
     @Invoker("renderGlint")
     void invokeRenderGlint(PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight, SkinnedMesh model, Armature armature, OpenMatrix4f[] poses);
+    
     @Invoker("renderTrim")
-    void invokeRenderTrim(PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight, SkinnedMesh model, Armature armature, ArmorMaterial armorMaterial, ArmorTrim armorTrim, EquipmentSlot slot, OpenMatrix4f[] pose);
-    @Invoker("getArmorTexture")
-    ResourceLocation invokeGetArmorTexture(ItemStack itemstack, LivingEntity entity, SkinnedMesh armorMesh, EquipmentSlot slot, String type, M originalModel);
+    void invokeRenderTrim(PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight, SkinnedMesh model, Armature armature, Holder<ArmorMaterial> armorMaterial, ArmorTrim armorTrim, EquipmentSlot slot, OpenMatrix4f[] pose);
+    
     @Accessor("firstPersonModel")
     boolean getIsFirstPerson();
 }

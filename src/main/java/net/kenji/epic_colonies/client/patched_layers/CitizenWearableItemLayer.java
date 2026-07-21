@@ -21,17 +21,19 @@ import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.ModelManager;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.EquipmentSlot.Type;
 import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.DyeableLeatherItem;
+import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.armortrim.ArmorTrim;
-import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.world.item.component.DyedItemColor;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.asset.JsonAssetLoader;
 import yesman.epicfight.api.client.model.SkinnedMesh;
@@ -79,7 +81,7 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
     }
 
     public static SkinnedMesh getCachedModel(Item item) {
-        ResourceLocation key = ForgeRegistries.ITEMS.getKey(item);
+        ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
         return (SkinnedMesh)ARMOR_MODELS.get(key);
     }
 
@@ -106,7 +108,7 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
         }
 
         for(EquipmentSlot slot : EquipmentSlot.values()) {
-            if (slot.getType() == Type.ARMOR) {
+            if (slot.isArmor()) {
 
                 if(EpicColoniesConfigClient.JOB_ONLY_ARMOR.get()) {
                     if (jobEntry == null)
@@ -158,7 +160,7 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
                         }
 
                         HumanoidModel<?> defaultModel = ((AccessorHumanoidArmorLayer)vanillaLayer).invokeGetArmorModel(slot);
-                        Model armorModel = ForgeHooksClient.getArmorModel(entityliving, itemstack, slot, defaultModel);
+                        Model armorModel = IClientItemExtensions.of(itemstack).getHumanoidArmorModel(entityliving, itemstack, slot, defaultModel);
                         SkinnedMesh armorMesh = this.getArmorModel(vanillaLayer, defaultModel, armorModel, entityliving, armorItem, itemstack, slot);
                         if (armorMesh == null) {
                             poseStack.popPose();
@@ -208,19 +210,22 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
                             }
                         }
 
-                        if (armorItem instanceof DyeableLeatherItem) {
-                            DyeableLeatherItem dyeableItem = (DyeableLeatherItem)armorItem;
-                            int i = dyeableItem.getColor(itemstack);
+                        DyedItemColor dyedColor = itemstack.get(DataComponents.DYED_COLOR);
+                        if (dyedColor != null) {
+                            int i = dyedColor.rgb();
                             float r = (float)(i >> 16 & 255) / 255.0F;
                             float g = (float)(i >> 8 & 255) / 255.0F;
                             float b = (float)(i & 255) / 255.0F;
-                            ((AccessorWearableItemLayer)this).invokeRenderArmor(poseStack, buf, packedLight, armorMesh, entitypatch.getArmature(), r, g, b, ((AccessorWearableItemLayer)this).invokeGetArmorTexture(itemstack, entityliving, armorMesh, slot, (String)null, defaultModel), poses);
-                            ((AccessorWearableItemLayer)this).invokeRenderArmor(poseStack, buf, packedLight, armorMesh, entitypatch.getArmature(), 1.0F, 1.0F, 1.0F, ((AccessorWearableItemLayer)this).invokeGetArmorTexture(itemstack, entityliving, armorMesh, slot, "overlay", defaultModel), poses);
+                            ((AccessorWearableItemLayer)this).invokeRenderArmor(poseStack, buf, packedLight, armorMesh, entitypatch.getArmature(), r, g, b, WearableItemLayer.getArmorResource(entityliving, itemstack, slot, (String)null), poses);
+                            ((AccessorWearableItemLayer)this).invokeRenderArmor(poseStack, buf, packedLight, armorMesh, entitypatch.getArmature(), 1.0F, 1.0F, 1.0F, WearableItemLayer.getArmorResource(entityliving, itemstack, slot, "overlay"), poses);
                         } else {
-                            ((AccessorWearableItemLayer)this).invokeRenderArmor(poseStack, buf, packedLight, armorMesh, entitypatch.getArmature(), 1.0F, 1.0F, 1.0F, ((AccessorWearableItemLayer)this).invokeGetArmorTexture(itemstack, entityliving, armorMesh, slot, (String)null, defaultModel), poses);
+                            ((AccessorWearableItemLayer)this).invokeRenderArmor(poseStack, buf, packedLight, armorMesh, entitypatch.getArmature(), 1.0F, 1.0F, 1.0F, WearableItemLayer.getArmorResource(entityliving, itemstack, slot, (String)null), poses);
                         }
 
-                        ArmorTrim.getTrim(entityliving.level().registryAccess(), itemstack).ifPresent((armorTrim) -> ((AccessorWearableItemLayer)this).invokeRenderTrim(poseStack, buf, packedLight, armorMesh, entitypatch.getArmature(), armorItem.getMaterial(), armorTrim, slot, poses));
+                        ArmorTrim trim = itemstack.get(DataComponents.TRIM);
+                        if (trim != null) {
+                            ((AccessorWearableItemLayer)this).invokeRenderTrim(poseStack, buf, packedLight, armorMesh, entitypatch.getArmature(), armorItem.getMaterial(), trim, slot, poses);
+                        }
                         if (itemstack.hasFoil()) {
                             ((AccessorWearableItemLayer)this).invokeRenderGlint(poseStack, buf, packedLight, armorMesh, entitypatch.getArmature(), poses);
                         }
@@ -234,12 +239,12 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
     }
 
     private SkinnedMesh getArmorModel(HumanoidArmorLayer<E, M, M> originalRenderer, HumanoidModel originalModel, Model forgeHooksArmorModel, E entityliving, ArmorItem armorItem, ItemStack itemstack, EquipmentSlot slot) {
-        ResourceLocation registryName = ForgeRegistries.ITEMS.getKey(armorItem);
-        if (ARMOR_MODELS.containsKey(registryName) && !ClientEngine.getInstance().renderEngine.shouldRenderVanillaModel()) {
+        ResourceLocation registryName = BuiltInRegistries.ITEM.getKey(armorItem);
+        if (ARMOR_MODELS.containsKey(registryName) && !ClientEngine.getInstance().isVanillaModelDebuggingMode()) {
             return (SkinnedMesh)ARMOR_MODELS.get(registryName);
         } else {
             ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
-            ResourceLocation rl = ResourceLocation.fromNamespaceAndPath(ForgeRegistries.ITEMS.getKey(armorItem).getNamespace(), "animmodels/armor/" + ForgeRegistries.ITEMS.getKey(armorItem).getPath() + ".json");
+            ResourceLocation rl = ResourceLocation.fromNamespaceAndPath(BuiltInRegistries.ITEM.getKey(armorItem).getNamespace(), "animmodels/armor/" + BuiltInRegistries.ITEM.getKey(armorItem).getPath() + ".json");
             SkinnedMesh skinnedMesh = null;
             if (resourceManager.getResource(rl).isPresent()) {
                 try {
@@ -305,6 +310,4 @@ public class CitizenWearableItemLayer<E extends AbstractEntityCitizen, T extends
             return skinnedMesh;
         }
     }
-
-
 }

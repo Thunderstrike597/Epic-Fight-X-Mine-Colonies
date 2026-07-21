@@ -10,10 +10,10 @@ import yesman.epicfight.api.animation.AnimationManager;
 import yesman.epicfight.api.animation.LivingMotions;
 import yesman.epicfight.gameasset.Animations;
 import yesman.epicfight.gameasset.ColliderPreset;
-import yesman.epicfight.gameasset.EpicFightSkills;
-import yesman.epicfight.gameasset.EpicFightSounds;
+import yesman.epicfight.registry.entries.EpicFightSkills;
+import yesman.epicfight.registry.entries.EpicFightSounds;
 import yesman.epicfight.main.EpicFightMod;
-import yesman.epicfight.particle.EpicFightParticles;
+import yesman.epicfight.registry.entries.EpicFightParticles;
 import yesman.epicfight.particle.HitParticleType;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
@@ -24,7 +24,7 @@ import java.util.function.Function;
 
 public class EpicColoniesWeaponCapabilityPresets {
 
-    public static final Function<Item, CapabilityItem.Builder> DUAL_SWORDS = (item) -> {
+    public static final Function<Item, CapabilityItem.Builder<?>> DUAL_SWORDS = (item) -> {
         WeaponCapability.Builder builder = WeaponCapability.builder()
                 .category(EpicColoniesWeaponCategory.DUAL_SWORDS)
                 .styleProvider((playerpatch) ->
@@ -43,7 +43,7 @@ public class EpicColoniesWeaponCapabilityPresets {
                                 Animations.SWORD_MOUNT_ATTACK}
                 )
                 .innateSkill(CapabilityItem.Styles.TWO_HAND,
-                        (itemstack) -> EpicFightSkills.DANCING_EDGE)
+                        (itemstack) -> EpicFightSkills.DANCING_EDGE.get())
                 .livingMotionModifier(CapabilityItem.Styles.TWO_HAND, LivingMotions.BLOCK, Animations.SWORD_DUAL_GUARD)
                 .livingMotionModifier(CapabilityItem.Styles.TWO_HAND, LivingMotions.IDLE, Animations.BIPED_HOLD_DUAL_WEAPON)
                 .livingMotionModifier(CapabilityItem.Styles.TWO_HAND, LivingMotions.KNEEL, Animations.BIPED_HOLD_DUAL_WEAPON)
@@ -61,7 +61,7 @@ public class EpicColoniesWeaponCapabilityPresets {
 
         return builder;
     };
-    public static final Function<Item, CapabilityItem.Builder> DUAL_DAGGERS = (item) -> {
+    public static final Function<Item, CapabilityItem.Builder<?>> DUAL_DAGGERS = (item) -> {
         WeaponCapability.Builder builder = WeaponCapability.builder().category(CapabilityItem.WeaponCategories.DAGGER)
                 .styleProvider((playerpatch) -> CapabilityItem.Styles.TWO_HAND)
                 .swingSound((SoundEvent)EpicFightSounds.WHOOSH_SMALL.get()).
@@ -77,9 +77,9 @@ public class EpicColoniesWeaponCapabilityPresets {
                 .newStyleCombo(CapabilityItem.Styles.MOUNT,
                         new AnimationManager.AnimationAccessor[]{Animations.SWORD_MOUNT_ATTACK})
                 .innateSkill(CapabilityItem.Styles.ONE_HAND,
-                        (itemstack) -> EpicFightSkills.EVISCERATE)
+                        (itemstack) -> EpicFightSkills.EVISCERATE.get())
                 .innateSkill(CapabilityItem.Styles.TWO_HAND, (itemstack) ->
-                        EpicFightSkills.BLADE_RUSH)
+                        EpicFightSkills.BLADE_RUSH.get())
                 .livingMotionModifier(CapabilityItem.Styles.TWO_HAND, LivingMotions.IDLE, Animations.BIPED_HOLD_DUAL_WEAPON)
                 .livingMotionModifier(CapabilityItem.Styles.TWO_HAND, LivingMotions.KNEEL, Animations.BIPED_HOLD_DUAL_WEAPON)
                 .livingMotionModifier(CapabilityItem.Styles.TWO_HAND, LivingMotions.WALK, Animations.BIPED_HOLD_DUAL_WEAPON)
@@ -97,5 +97,4 @@ public class EpicColoniesWeaponCapabilityPresets {
 
         return builder;
     };
-
 }
