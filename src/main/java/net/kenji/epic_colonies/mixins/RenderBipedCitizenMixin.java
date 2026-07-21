@@ -34,7 +34,7 @@ public class RenderBipedCitizenMixin {
             }
         }
         /// SKIN DEBUG BELOW
-       else{
+       /*else{
             IJobView jobView = entity.getCitizenDataView().getJobView();
             if(jobView != null){
                 if(jobView.getEntry() == ModJobs.archer.get()){
@@ -48,6 +48,6 @@ public class RenderBipedCitizenMixin {
                     }
                 }
             }
-        }
+        }*/
     }
 }

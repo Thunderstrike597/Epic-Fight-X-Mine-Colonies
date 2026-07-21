@@ -14,6 +14,7 @@ import com.minecolonies.core.client.render.RenderBipedCitizen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Pair;
 import net.kenji.epic_colonies.EpicColonies;
+import net.kenji.epic_colonies.EpicColoniesConfigClient;
 import net.kenji.epic_colonies.api.CitizenArmatureTypes;
 import net.kenji.epic_colonies.api.data.CitizenMeshCache;
 import net.kenji.epic_colonies.api.texture_detection.FaceOffsetDetector;
@@ -141,7 +142,7 @@ public class PCitizenRenderer extends PatchedLivingEntityRenderer<AbstractEntity
                     ResourceLocation loc = originalRenderer == null ? citizen.getTexture() : originalRenderer.getTextureLocation(citizen);
                     int getFaceOffset = FaceOffsetDetector.getFaceOffset(loc);
 
-                    if (getFaceOffset == 0 || !citizen.isFemale()) {
+                    if (getFaceOffset == 0 || !citizen.isFemale() || !EpicColoniesConfigClient.USE_CITIZEN_SKIN_DETECTION.get()) {
                         patch.setCurrentCitizenArmatureFromArmatureType(CitizenArmatureTypes.REGULAR);
                         return citizen.isFemale() ? EpicColoniesMeshes.DEFAULT_FEMALE : EpicColoniesMeshes.DEFAULT_MALE;
                     } else {

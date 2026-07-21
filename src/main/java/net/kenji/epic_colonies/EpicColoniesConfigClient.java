@@ -11,6 +11,8 @@ public class EpicColoniesConfigClient {
     public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
     public static final ForgeConfigSpec SPEC;
 
+    public static ForgeConfigSpec.ConfigValue<Boolean> USE_CITIZEN_SKIN_DETECTION;
+
     public static ForgeConfigSpec.ConfigValue<Boolean> HIDE_CITIZEN_HELMET;
     public static ForgeConfigSpec.ConfigValue<Boolean> JOB_ONLY_ARMOR;
     public static ForgeConfigSpec.ConfigValue<List<? extends String>> VISIBLE_ARMOR_JOBS;
@@ -35,6 +37,9 @@ public class EpicColoniesConfigClient {
     static {
         BUILDER.push("Cosmetic");
 
+        USE_CITIZEN_SKIN_DETECTION = BUILDER
+                .comment("Should Citizens Use The Skin Detection For Citizens With Lower Eye Textures (Such as some which are part of MineColonies 'Patreon Exclusive' Packs)")
+                .define("Use Citizen Skin Detection", true);
         HIDE_CITIZEN_HELMET = BUILDER
                 .comment("Should Citizens With Visible Armor Have Their Helmet Hidden")
                 .define("Hide Citizen Helmet", false);
