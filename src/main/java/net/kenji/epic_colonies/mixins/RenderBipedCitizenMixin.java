@@ -1,8 +1,11 @@
 package net.kenji.epic_colonies.mixins;
 
+import com.minecolonies.api.colony.jobs.IJobView;
+import com.minecolonies.api.colony.jobs.ModJobs;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.core.client.render.RenderBipedCitizen;
 import net.kenji.epic_colonies.api.data.CitizenMeshCache;
+import net.kenji.epic_colonies.api.texture_detection.FaceOffsetDetector;
 import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
 import net.minecraft.resources.ResourceLocation;
@@ -20,14 +23,30 @@ public class RenderBipedCitizenMixin {
     @Inject(method = "getTextureLocation(Lcom/minecolonies/api/entity/citizen/AbstractEntityCitizen;)Lnet/minecraft/resources/ResourceLocation;", at = @At("RETURN"), cancellable = true)
     public void onGetTextureLocation(AbstractEntityCitizen entity, CallbackInfoReturnable<ResourceLocation> cir){
         RenderBipedCitizen self = (RenderBipedCitizen) (Object)this;
-
         if(entity.getCitizenDataView() == null) {
             CitizenMeshCache.Entry cached = CitizenMeshCache.get(entity.getUUID());
             if (cached != null) {
                 ResourceLocation location = CitizenMeshCache.resolveTextLocation(cached.skinTextureId());
 
-                if(location != null && cached.skinTextureId() != null && !cached.skinTextureId().isEmpty())
+                if(location != null && cached.skinTextureId() != null && !cached.skinTextureId().isEmpty()) {
                     cir.setReturnValue(location);
+                }
+            }
+        }
+        /// SKIN DEBUG BELOW
+       else{
+            IJobView jobView = entity.getCitizenDataView().getJobView();
+            if(jobView != null){
+                if(jobView.getEntry() == ModJobs.archer.get()){
+                    if(entity.isFemale()){
+                        ResourceLocation location = new ResourceLocation("minecolonies", "textures/entity/citizen/medieval/archerfemale1_d.png");
+                        if(location == null) {
+                            Log.info("Texture Loc Null!");
+                            return;
+                        }
+                        cir.setReturnValue(location);
+                    }
+                }
             }
         }
     }

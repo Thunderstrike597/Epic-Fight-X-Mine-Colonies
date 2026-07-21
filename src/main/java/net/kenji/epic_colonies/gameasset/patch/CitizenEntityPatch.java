@@ -11,6 +11,7 @@ import com.minecolonies.core.entity.ai.minimal.EntityAIEatTask;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.other.SittingEntity;
 import com.mojang.datafixers.util.Pair;
+import net.kenji.epic_colonies.api.CitizenArmatureTypes;
 import net.kenji.epic_colonies.api.FacialEmotionExpressions;
 import net.kenji.epic_colonies.api.data.CitizenMeshCache;
 import net.kenji.epic_colonies.client.meshes.EpicColoniesMesh;
@@ -22,6 +23,7 @@ import net.kenji.epic_colonies.gameasset.patch.base.AbstractExpressiveHumanoidPa
 import net.kenji.epic_colonies.mixins.LivingEntityAccessor;
 import net.kenji.epic_colonies.network.ClientCitizenSyncPacket;
 import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
+import net.kenji.epic_colonies.network.ServerCitizenArmaturePacket;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
@@ -47,6 +49,8 @@ public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends Abstrac
         super(Factions.VILLAGER);
     }
 
+    private HumanoidArmature currentCitizenArmature = EpicColoniesArmatures.CITIZEN_REGULAR.get();
+
     public static AssetAccessor<EpicColoniesMesh> getMeshFromTexture(AbstractEntityCitizen citizen, boolean isChild){
 
         if(isChild) {
@@ -63,6 +67,16 @@ public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends Abstrac
     }
 
 
+    public HumanoidArmature getCurrentCitizenArmature() {
+        return currentCitizenArmature;
+    }
+
+    public void setCurrentCitizenArmatureFromArmatureType(CitizenArmatureTypes currentCitizenArmature) {
+        if(this.getOriginal().level().isClientSide()){
+            EpicColoniesPacketHandler.sendToServer(new ServerCitizenArmaturePacket(this.getOriginal().getUUID(), CitizenArmatureTypes.REGULAR));
+        }
+        this.currentCitizenArmature = currentCitizenArmature.getArmature();
+    }
     @Override
     public void poseTick(DynamicAnimation animation,
                          yesman.epicfight.api.animation.Pose pose,
@@ -203,15 +217,14 @@ public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends Abstrac
                 else if(finalChildMesh == EpicColoniesMeshes.CHILD_FEMALE_LOWER_EYES){
                     childArmature = EpicColoniesArmatures.CHILD_FEMALE_LOWER_EYES.get();
                 }
-
             }
 
-            return !data.isChild() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : childArmature;
+            return !data.isChild() ? getCurrentCitizenArmature() : childArmature;
         }
         if(dataView != null){
-            return !dataView.isChild() ? EpicColoniesArmatures.CITIZEN_REGULAR.get() : childArmature;
+            return !dataView.isChild() ? getCurrentCitizenArmature() : childArmature;
         }
-        return EpicColoniesArmatures.CITIZEN_REGULAR.get();
+        return getCurrentCitizenArmature();
     }
     public boolean isCitizenAsleep(){
         return this.getOriginal().isSleeping() || this.original.getCitizenSleepHandler().isAsleep() || citizenPatchData.isAsleep || this.citizenPatchData.currentOptionalMotion == EpicColoniesLivingMotions.SIT_SLEEP;
