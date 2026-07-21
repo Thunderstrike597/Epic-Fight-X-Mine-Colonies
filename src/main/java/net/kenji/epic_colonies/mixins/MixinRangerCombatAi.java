@@ -96,11 +96,11 @@ public abstract class MixinRangerCombatAi {
             float chance = 15.0F / (float) (((EntityCitizen) this.mobSelf).getCitizenData().getCitizenSkillHandler().getLevel(Skill.Adaptability) + 1);
             mobSelf.getCapability(EpicFightCapabilities.CAPABILITY_ENTITY).ifPresent((cap) ->{
                 if(cap instanceof CitizenEntityPatch<?> entityPatch) {
-                    if(entityPatch.wasUsingBow && entityPatch.bowUseCounter >= 32) {
+                    if(entityPatch.isWasUsingBow()) {
                         CombatUtils.shootArrow(arrow, target, chance);
                         ((EntityCitizen) this.mobSelf).playSound(SoundEvents.SKELETON_SHOOT, 1.0F, (float) SoundUtils.getRandomPitch(((EntityCitizen) this.mobSelf).getRandom()));
                         entityPatch.setWasUsingBow(false);
-                        entityPatch.bowUseCounter = 0;
+
                     }
                 }
             });

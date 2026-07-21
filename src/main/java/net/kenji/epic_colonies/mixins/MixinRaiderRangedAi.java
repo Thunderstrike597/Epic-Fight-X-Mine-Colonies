@@ -81,7 +81,7 @@ public abstract class MixinRaiderRangedAi {
         }
         mobSelf.getCapability(EpicFightCapabilities.CAPABILITY_ENTITY).ifPresent((cap) -> {
             if (cap instanceof MinecoloniesMonsterPatch<?> entityPatch) {
-                if (entityPatch.wasUsingBow && entityPatch.bowUseCounter >= 32) {
+                if (entityPatch.isWasUsingBow()) {
                     CombatUtils.shootArrow(arrowEntity, target, 10.0F);
                     ((AbstractEntityMinecoloniesMonster) this.mobSelf).swing(InteractionHand.MAIN_HAND);
                     ((AbstractEntityMinecoloniesMonster) this.mobSelf).stopUsingItem();
@@ -91,8 +91,7 @@ public abstract class MixinRaiderRangedAi {
                     }
 
                     ((AbstractEntityMinecoloniesMonster) this.mobSelf).playSound(attackSound, 1.0F, (float) this.getRandomPitch());
-
-
+                    entityPatch.setWasUsingBow(false);
                 }
 
             }
