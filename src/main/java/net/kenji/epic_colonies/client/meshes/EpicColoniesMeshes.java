@@ -30,6 +30,7 @@ import java.util.concurrent.Executor;
 public class EpicColoniesMeshes implements PreparableReloadListener {
 
     public static Map<Pair<Boolean, ResourceLocation>, Meshes.MeshAccessor<EpicColoniesMesh>> meshMap = new HashMap<>();
+    public static Map<Pair<Boolean, ResourceLocation>, Meshes.MeshAccessor<EpicColoniesMesh>> defaultMeshMap = new HashMap<>();
 
 
     public static List<ResourceLocation> bigEyeTextures = new ArrayList<>();
@@ -88,6 +89,7 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
 
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> DEFAULT_FEMALE;
+    public static final Meshes.MeshAccessor<EpicColoniesMesh> DEFAULT_FEMALE_LOWER_EYES;
 
     public static final Meshes.MeshAccessor<EpicColoniesMesh> CITIZEN_FEMALE;
     public static final Meshes.MeshAccessor<EpicColoniesMesh> CHILD_FEMALE;
@@ -210,6 +212,8 @@ public class EpicColoniesMeshes implements PreparableReloadListener {
 
 
         DEFAULT_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/default_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+        DEFAULT_FEMALE_LOWER_EYES = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/default_female_lower_eyes", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
+
         CITIZEN_FEMALE = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/citizen_female", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         CHILD_FEMALE_BIG_EYES = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/child_female_big_eyes", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));
         CHILD_FEMALE_LOWER_EYES = Meshes.MeshAccessor.create(EpicColonies.MODID, "entity/citizen/child_female_eyes_lower", (jsonModelLoader) -> (EpicColoniesMesh) jsonModelLoader.loadSkinnedMesh(EpicColoniesMesh::new));

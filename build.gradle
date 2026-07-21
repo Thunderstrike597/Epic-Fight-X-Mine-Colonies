@@ -185,6 +185,7 @@ dependencies {
     if (project.particle_rain_file_id != 'placeholder') {
         implementation 'curse.maven:particle-rain-421897:' + project.particle_rain_file_id
     }
+
 }
 
 tasks.named('processResources', ProcessResources).configure {

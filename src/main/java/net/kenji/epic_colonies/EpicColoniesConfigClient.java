@@ -11,10 +11,12 @@ public class EpicColoniesConfigClient {
     public static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
     public static final ModConfigSpec SPEC;
 
-    public static ModConfigSpec.ConfigValue<Boolean> HIDE_CITIZEN_HELMET;
-    public static ModConfigSpec.ConfigValue<Boolean> JOB_ONLY_ARMOR;
-    public static ModConfigSpec.ConfigValue<List<? extends String>> VISIBLE_ARMOR_JOBS;
-    public static ModConfigSpec.ConfigValue<Double> JOG_PLAYBACK_SPEED_MIN;
+    public static ModConfigSpec.ConfigValue<Boolean> USE_CITIZEN_SKIN_DETECTION;
+
+    public static ModConfigSpec.ConfigValue<Boolean> HIDE_CITIZEN_HELMET;
+    public static ModConfigSpec.ConfigValue<Boolean> JOB_ONLY_ARMOR;
+    public static ModConfigSpec.ConfigValue<List<? extends String>> VISIBLE_ARMOR_JOBS;
+    public static ModConfigSpec.ConfigValue<Double> JOG_PLAYBACK_SPEED_MIN;
     public static ModConfigSpec.ConfigValue<Double> JOG_PLAYBACK_SPEED_MAX;
 
 
@@ -35,6 +37,9 @@ public class EpicColoniesConfigClient {
     static {
         BUILDER.push("Cosmetic");
 
+        USE_CITIZEN_SKIN_DETECTION = BUILDER
+                .comment("Should Citizens Use The Skin Detection For Citizens With Lower Eye Textures (Such as some which are part of MineColonies 'Patreon Exclusive' Packs)")
+                .define("Use Citizen Skin Detection", true);
         HIDE_CITIZEN_HELMET = BUILDER
                 .comment("Should Citizens With Visible Armor Have Their Helmet Hidden")
                 .define("Hide Citizen Helmet", false);

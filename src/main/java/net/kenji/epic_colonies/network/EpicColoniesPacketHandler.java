@@ -29,14 +29,29 @@ public class EpicColoniesPacketHandler {
         );
 
         // Client to Server
+
         registrar.playToServer(
+
                 ServerBowActionPacket.TYPE,
+
                 ServerBowActionPacket.STREAM_CODEC,
+
                 ServerBowActionPacket::handle
+
+        );
+
+        registrar.playToServer(
+
+                ServerCitizenArmaturePacket.TYPE,
+
+                ServerCitizenArmaturePacket.STREAM_CODEC,
+
+                ServerCitizenArmaturePacket::handle
+
         );
     }
 
-    public static void sendToServer(CustomPacketPayload packet) {
+    public static void sendToServer(CustomPacketPayload packet) {
         PacketDistributor.sendToServer(packet);
     }
 

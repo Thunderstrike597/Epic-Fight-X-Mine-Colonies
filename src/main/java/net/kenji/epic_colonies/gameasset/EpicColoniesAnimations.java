@@ -70,7 +70,7 @@ public class EpicColoniesAnimations {
                 return 1.0F;
             } else {
                 if(entitypatch instanceof CitizenEntityPatch<?> patch){
-                    double netY = patch.getOriginal().position().y - patch.lastY; // e.g. N = 4
+                    double netY = patch.getOriginal().position().y - patch.getLastY(); // e.g. N = 4
                     if (Math.abs(netY) < 0.03) {
                         return 0.0F; // net-stationary over the window — blocked/idle
                     }

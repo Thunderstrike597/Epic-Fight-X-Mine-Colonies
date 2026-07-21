@@ -63,19 +63,19 @@ public abstract class MixinRaiderRangedAi {
         if (((AbstractEntityMinecoloniesMonster) this.mobSelf).getDifficulty() > (double) 3.0F) {
             ((AccessorAbstractArrow) arrowEntity).invokeSetPierceLevel((byte) 2); // Expose setPierceLevel via Accessor
         }
-        
-        EpicFightCapabilities.getUnparameterizedEntityPatch(mobSelf, MinecoloniesMonsterPatch.class).ifPresent((cap) -> {
-            if (cap.wasUsingBow && cap.bowUseCounter >= 32) {
-                CombatUtils.shootArrow(arrowEntity, target, 10.0F);
-                ((AbstractEntityMinecoloniesMonster) this.mobSelf).swing(InteractionHand.MAIN_HAND);
-                ((AbstractEntityMinecoloniesMonster) this.mobSelf).stopUsingItem();
-                SoundEvent attackSound = SoundEvents.SKELETON_SHOOT;
-                if (arrowEntity instanceof ICustomAttackSound) {
-                    attackSound = ((ICustomAttackSound) arrowEntity).getAttackSound();
-                }
-
-                ((AbstractEntityMinecoloniesMonster) this.mobSelf).playSound(attackSound, 1.0F, (float) this.getRandomPitch());
-            }
-        });
-    }
+        EpicFightCapabilities.getUnparameterizedEntityPatch(mobSelf, MinecoloniesMonsterPatch.class).ifPresent((cap) -> {
+            if (cap.isWasUsingBow()) {
+                CombatUtils.shootArrow(arrowEntity, target, 10.0F);
+                ((AbstractEntityMinecoloniesMonster) this.mobSelf).swing(InteractionHand.MAIN_HAND);
+                ((AbstractEntityMinecoloniesMonster) this.mobSelf).stopUsingItem();
+                SoundEvent attackSound = SoundEvents.SKELETON_SHOOT;
+                if (arrowEntity instanceof ICustomAttackSound) {
+                    attackSound = ((ICustomAttackSound) arrowEntity).getAttackSound();
+                }
+
+                ((AbstractEntityMinecoloniesMonster) this.mobSelf).playSound(attackSound, 1.0F, (float) this.getRandomPitch());
+                cap.setWasUsingBow(false);
+            }
+        });
+    }
 }
