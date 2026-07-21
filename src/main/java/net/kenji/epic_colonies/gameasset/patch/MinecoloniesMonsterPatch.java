@@ -12,7 +12,7 @@ import yesman.epicfight.world.capabilities.entitypatch.Factions;
 
 public class MinecoloniesMonsterPatch<M extends AbstractEntityMinecoloniesMonster> extends AbstractExpressiveHumanoidPatch<M> {
 
-    public MinecoloniesMonsterPatch(AbstractEntityMinecoloniesMonster entity) {
+    public MinecoloniesMonsterPatch(M entity) {
         super(entity, Factions.VILLAGER);
     }
 

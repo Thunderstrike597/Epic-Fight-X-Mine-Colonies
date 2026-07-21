@@ -448,8 +448,9 @@ public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends Abstrac
     }
 
     @Override
-    @Override
-    public void preTickClient() {
+
+    public void preTickClient() {
+
         super.preTickClient();
         onCitizenTick();
 

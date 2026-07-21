@@ -16,7 +16,7 @@ import yesman.epicfight.world.capabilities.entitypatch.Factions;
 
 public class MercenaryPatch<M extends PathfinderMob> extends AbstractExpressiveHumanoidPatch<M> {
 
-    public MercenaryPatch(PathfinderMob entity) {
+    public MercenaryPatch(M entity) {
         super(entity, Factions.VILLAGER);
     }
     @Override
