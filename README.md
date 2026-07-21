@@ -1,6 +1,5 @@
 # Epic Fight: Epicfied (Epic Colonies) — 1.21.1 NeoForge Port
 
-[![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21.1-green.svg)(https://minecraft.net/)
 [![NeoForge](https://img.shields.io/badge/NeoForge-21.1.241-blue.svg)](https://neoforged.net/)
 [![Epic Fight](https://img.shields.io/badge/Epic%20Fight-21.17.3.1-orange.svg)](https://www.curseforge.com/minecraft/mc-mods/epic-fight-mod)
 A highly polished, fully updated, and optimized **NeoForge 1.21.1** port of **EpicColonies**, bringing seamless compatibilities between **MineColonies** and **Epic Fight** to modern Minecraft!
