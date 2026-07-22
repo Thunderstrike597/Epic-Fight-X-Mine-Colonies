@@ -27,10 +27,11 @@ import net.kenji.epic_colonies.network.ServerCitizenArmaturePacket;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
-import net.minecraftforge.event.entity.living.LivingEvent;
+import org.jline.utils.Log;
 import yesman.epicfight.api.animation.*;
 import yesman.epicfight.api.animation.types.DynamicAnimation;
 import yesman.epicfight.api.animation.types.StaticAnimation;
@@ -40,13 +41,12 @@ import yesman.epicfight.api.utils.math.OpenMatrix4f;
 import yesman.epicfight.api.utils.math.Vec3f;
 import yesman.epicfight.model.armature.HumanoidArmature;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
-import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.item.CapabilityItem;
 
 public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends AbstractExpressiveHumanoidPatch<C> {
 
-    public CitizenEntityPatch() {
-        super(Factions.VILLAGER);
+    public CitizenEntityPatch(C entity) {
+        super(entity);
     }
 
     private HumanoidArmature currentCitizenArmature = EpicColoniesArmatures.CITIZEN_REGULAR.get();
@@ -144,8 +144,8 @@ public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends Abstrac
     }
 
     @Override
-    public void tick(LivingEvent.LivingTickEvent event) {
-        super.tick(event);
+    public void preTick() {
+        super.preTick();
 
         if(getNearestPlayer(this.getOriginal()) != null){
             getAnimator().playAnimation(eyeMoveAnim, 0F);
@@ -168,8 +168,8 @@ public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends Abstrac
     }
 
     @Override
-    public void onAddedToWorld() {
-        super.onAddedToWorld();
+    public void onAddedToLevel() {
+        super.onAddedToLevel();
         DEFAULT_BROW_ANIM = EpicColoniesAnimations.CITIZEN_BLINK;
         DEFAULT_EYES_ANIM = EpicColoniesAnimations.CITIZEN_EYES_MOVE;
 
@@ -245,9 +245,10 @@ public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends Abstrac
     private void onCitizenTick(){
         tickFacialAnim();
         setSleepDir();
-        handleHeldItem();
+
 
         if(!this.isLogicalClient()) {
+            handleHeldItem();
             tickCurrentOptionalMotion();
             if (citizenPatchData.currentOptionalCompositeMotion != null) {
                 citizenPatchData.prevOptionalCompositeMotion = citizenPatchData.currentOptionalCompositeMotion;
@@ -291,10 +292,10 @@ public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends Abstrac
 
 
     @Override
-    public void serverTick(LivingEvent.LivingTickEvent event) {
-        super.serverTick(event); // already dispatches to clientTick()/serverTick() internally, including onCitizenTick() on the client
-        onCitizenTick(); // only need to run it here for the server, since clientTick() already covers the client path
+    public void preTickServer() {
+        onCitizenTick();
         manageHeadRotWithEyes();
+        super.preTickServer();
     }
 
     protected void setSleepDir(){
@@ -324,7 +325,7 @@ public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends Abstrac
 
         if (this.getOriginal().onClimbable() && !actuallyOnGround())
             motion = LivingMotions.CLIMB;
-        else if (((LivingEntityAccessor)citizen).isJumping()) {
+        else if (((LivingEntityAccessor)(LivingEntity)citizen).isJumping()) {
             if(!didJump) {
                 motion = LivingMotions.JUMP;
                 didJump = true;
@@ -332,7 +333,6 @@ public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends Abstrac
         }
         else if (citizen.getVehicle() instanceof SittingEntity) {
             motion = LivingMotions.SIT;
-
         }
         else if (citizen.getPose() == Pose.SLEEPING) {
             motion = LivingMotions.SLEEP;
@@ -377,6 +377,7 @@ public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends Abstrac
         citizenPatchData.currentOptionalCompositeMotion = compositeMotion;
 
         EpicColoniesPacketHandler.sendToAll(new ClientCitizenSyncPacket(citizen.getId(), this.getOriginal().getUUID(), citizenPatchData));
+        debugLogNearestPlayer("Logging Optional Motion Set: " + citizenPatchData.currentOptionalMotion);
         if(didJump && citizen.onGround()){
             didJump = false;
         }
@@ -443,8 +444,8 @@ public class CitizenEntityPatch<C extends AbstractEntityCitizen> extends Abstrac
     }
 
     @Override
-    protected void clientTick(LivingEvent.LivingTickEvent event) {
-        super.clientTick(event);
+    public void preTickClient() {
+        super.preTickClient();
         onCitizenTick();
 
         playCompositeOnLayer(facialAnim, Layer.Priority.HIGHEST);

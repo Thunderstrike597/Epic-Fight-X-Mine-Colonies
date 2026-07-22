@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
+import yesman.epicfight.world.capabilities.entitypatch.EntityPatch;
 
 @Mixin(value = AttackMoveAI.class, remap = false)
 public abstract class MixinAttackMoveAi {
@@ -37,7 +38,7 @@ public abstract class MixinAttackMoveAi {
 
     @Unique Mob mobSelf;
 
-    @Inject(method = "<init>", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "<init>", at = @At("RETURN"))
     public void onInit(Mob owner, ITickRateStateMachine stateMachine, CallbackInfo ci){
         mobSelf = owner;
     }
@@ -54,8 +55,10 @@ public abstract class MixinAttackMoveAi {
             if (this.nextAttackTime < selfMob.getUser().level().getGameTime() && this.isInDistanceForAttack(selfMob.getUser().getTarget())) {
                 if (selfMob.getUser().getSensing().hasLineOfSight(selfMob.getUser().getTarget())) {
                     this.pathAttempts = 0;
+                    EntityPatch<?> entityPatch = EpicFightCapabilities.ENTITY_PATCH_PROVIDER.getCapability(mobSelf);
+
                     selfMob.getUser().getLookControl().setLookAt(selfMob.getUser().getTarget());
-                    if(!mobSelf.getCapability(EpicFightCapabilities.CAPABILITY_ENTITY).isPresent()) {
+                    if(entityPatch == null) {
                         this.doAttack(this.mobSelf.getTarget());
                         this.nextAttackTime = selfMob.getUser().level().getGameTime() + (long) this.getAttackDelay();
                     }

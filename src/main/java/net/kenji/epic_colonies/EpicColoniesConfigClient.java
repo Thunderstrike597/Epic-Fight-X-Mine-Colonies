@@ -2,22 +2,23 @@ package net.kenji.epic_colonies;
 
 import com.minecolonies.api.colony.jobs.ModJobs;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
+
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class EpicColoniesConfigClient {
-    public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-    public static final ForgeConfigSpec SPEC;
+    public static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    public static final ModConfigSpec SPEC;
 
-    public static ForgeConfigSpec.ConfigValue<Boolean> USE_CITIZEN_SKIN_DETECTION;
+    public static ModConfigSpec.ConfigValue<Boolean> USE_CITIZEN_SKIN_DETECTION;
 
-    public static ForgeConfigSpec.ConfigValue<Boolean> HIDE_CITIZEN_HELMET;
-    public static ForgeConfigSpec.ConfigValue<Boolean> JOB_ONLY_ARMOR;
-    public static ForgeConfigSpec.ConfigValue<List<? extends String>> VISIBLE_ARMOR_JOBS;
-    public static ForgeConfigSpec.ConfigValue<Double> JOG_PLAYBACK_SPEED_MIN;
-    public static ForgeConfigSpec.ConfigValue<Double> JOG_PLAYBACK_SPEED_MAX;
+    public static ModConfigSpec.ConfigValue<Boolean> HIDE_CITIZEN_HELMET;
+    public static ModConfigSpec.ConfigValue<Boolean> JOB_ONLY_ARMOR;
+    public static ModConfigSpec.ConfigValue<List<? extends String>> VISIBLE_ARMOR_JOBS;
+    public static ModConfigSpec.ConfigValue<Double> JOG_PLAYBACK_SPEED_MIN;
+    public static ModConfigSpec.ConfigValue<Double> JOG_PLAYBACK_SPEED_MAX;
 
 
    private static List<ResourceLocation> defaultArmorJobsLoc = new ArrayList<>();

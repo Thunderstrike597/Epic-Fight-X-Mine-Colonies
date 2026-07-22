@@ -1,24 +1,9 @@
-buildscript {
-    repositories {
-        // These repositories are only for Gradle plugins, put any other repositories in the repository block further below
-        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
-    }
-}
-
-
 plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+    id 'net.neoforged.gradle.userdev' version '7.0.192'
 }
-
-apply plugin: 'org.spongepowered.mixin'
 
 group = mod_group_id
 version = mod_version
@@ -28,122 +13,52 @@ base {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
 
-minecraft {
-    // The mappings can be changed at any time and must be in the following format.
-    // Channel:   Version:
-    // official   MCVersion             Official field/method names from Mojang mapping files
-    // parchment  YYYY.MM.DD-MCVersion  Open community-sourced parameter names and javadocs layered on top of official
-    //
-    // You must be aware of the Mojang license when using the 'official' or 'parchment' mappings.
-    // See more information here: https://github.com/MinecraftForge/MCPConfig/blob/master/Mojang.md
-    //
-    // Parchment is an unofficial project maintained by ParchmentMC, separate from MinecraftForge
-    // Additional setup is needed to use their mappings: https://parchmentmc.org/docs/getting-started
-    //
-    // Use non-default mappings at your own risk. They may not always work.
-    // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: mapping_channel, version: mapping_version
+// -------------------- Runs --------------------
+runs {
+    configureEach {
+        workingDirectory project.file("run")
+        modSource sourceSets.main
 
-    // When true, this property will have all Eclipse/IntelliJ IDEA run configurations run the "prepareX" task for the given run configuration before launching the game.
-    // In most cases, it is not necessary to enable.
-    // enableEclipsePrepareRuns = true
-    // enableIdeaPrepareRuns = true
+        systemProperties 'forge.logging.markers': 'REGISTRIES',
+                'forge.logging.console.level': 'debug'
 
-    // This property allows configuring Gradle's ProcessResources task(s) to run on IDE output locations before launching the game.
-    // It is REQUIRED to be set to true for this template to function.
-    // See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
-    copyIdeResources = true
+        // Tell Mixin where the config is
+        systemProperty 'mixin.config', "${mod_id}.mixins.json"
+    }
 
-    // When true, this property will add the folder name of all declared run configurations to generated IDE run configurations.
-    // The folder name can be set on a run configuration using the "folderName" property.
-    // By default, the folder name of a run configuration is the name of the Gradle project containing it.
-    // generateRunFolders = true
+    // Name matches the run type — NeoGradle auto-configures it
+    client {
+        systemProperty 'forge.enabledGameTestNamespaces', mod_id
+    }
 
-    // This property enables access transformers for use in development.
-    // They will be applied to the Minecraft artifact.
-    // The access transformer file can be anywhere in the project.
-    // However, it must be at "META-INF/accesstransformer.cfg" in the final mod jar to be loaded by Forge.
-    // This default location is a best practice to automatically put the file in the right place in the final jar.
-    // See https://docs.minecraftforge.net/en/latest/advanced/accesstransformers/ for more information.
-    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    server {
+        systemProperty 'forge.enabledGameTestNamespaces', mod_id
+        systemProperty 'forge.forcePacketLimit', '33554432'
+        programArgument '--nogui'
+    }
 
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
-    runs {
-        // applies to all the run configs below
-        configureEach {
-            workingDirectory file("${projectDir}/run")
+    gameTestServer {
+        systemProperty 'forge.enabledGameTestNamespaces', mod_id
+    }
 
-            // Recommended logging data for a userdev environment
-            // The markers can be added/remove as needed separated by commas.
-            // "SCAN": For mods scan.
-            // "REGISTRIES": For firing of registry events.
-            // "REGISTRYDUMP": For getting the contents of all registries.
-            property 'forge.logging.markers', 'REGISTRIES'
-
-
-            // Recommended logging level for the console
-            // You can set various levels here.
-            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
-            property 'forge.logging.console.level', 'debug'
-
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        client {
-            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            property 'forge.enabledGameTestNamespaces', mod_id
-        }
-
-        server {
-            property 'forge.enabledGameTestNamespaces', mod_id
-            property 'forge.forcePacketLimit', '33554432'
-            args '--nogui'
-        }
-
-        // This run config launches GameTestServer and runs all registered gametests, then exits.
-        // By default, the server will crash when no gametests are provided.
-        // The gametest system is also enabled by default for other run configs under the /test command.
-        gameTestServer {
-            property 'forge.enabledGameTestNamespaces', mod_id
-        }
-
-        data {
-            // example of overriding the workingDirectory set in configureEach above
-            workingDirectory project.file('run-data')
-            tasks.withType(ProcessResources).configureEach {
-                duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-            }
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-        }
+    data {
+        workingDirectory project.file('run-data')
+        programArguments.addAll '--mod', mod_id, '--all',
+                '--output', file('src/generated/resources/').absolutePath,
+                '--existing', file('src/main/resources/').absolutePath
     }
 }
 
-mixin {
-    add sourceSets.main, "${mod_id}.refmap.json"
+// -------------------- Mixin --------------------
 
-    config "${mod_id}.mixins.json"
-}
 
-// Include resources generated by data generators.
-sourceSets {
-    main {
-        resources {
-            srcDirs = ['src/main/resources']
-            if (gradle.startParameter.taskNames.any { it.toLowerCase().contains('build') }) {
-                exclude('data/samurai_dynasty')
-                }
-        }
-    }
-}
+// -------------------- Sources --------------------
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+// -------------------- Repositories --------------------
 repositories {
     mavenLocal()
     maven {
@@ -173,82 +88,110 @@ repositories {
     }
 }
 
+// -------------------- Dependencies --------------------
 dependencies {
-    minecraft "net.minecraftforge:forge:1.20.1-47.4.20"
+    implementation "net.neoforged:neoforge:${neo_version}"
+    // ---------------- Performance ----------------
+    // Embeddium (NeoForge-native Sodium/Rubidium fork) - 1.0.15, 1.21.1
+    implementation "curse.maven:embeddium-908741:6118392"
 
-    implementation fg.deobf("curse.maven:embeddium-908741:5681725")
-
-    if (!gradle.startParameter.taskNames.any { it.toLowerCase().contains('runserver') }) {
-        implementation fg.deobf("curse.maven:oculus-581495:6020952")
-    }
+    // Oculus never got a NeoForge port and has no 1.21.1 build at all.
+    // If you want shaders back, the community fork "NeOculus" targets NeoForge 1.21+:
+    // implementation "curse.maven:neoculus-XXXXXX:XXXXXXX" // look up its project id if you want it
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
-    implementation fg.deobf("curse.maven:jei-238222:5533463")
-    implementation fg.deobf("curse.maven:just-enough-resources-jer-240630:5057220")
-    implementation fg.deobf("curse.maven:patchouli-306770:4966125")
+    // ---------------- JEI / JER ----------------
+    // JEI on NeoForge does not need fg.deobf() - it ships with official (Mojang) mappings directly.
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
+    runtimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
 
-    implementation fg.deobf("curse.maven:blockui-522992:7387525")
-    implementation fg.deobf("curse.maven:domum-ornamentum-527361:7421161")
-    implementation fg.deobf("curse.maven:multi-piston-303278:7097889")
-    implementation fg.deobf("curse.maven:structurize-298744:7427219")
-    implementation fg.deobf("curse.maven:towntalk-900364:5355511")
+    // Just Enough Resources (JER) - 1.6.0.13, 1.21.1 NeoForge
+    implementation "curse.maven:just-enough-resources-jer-240630:6190140"
 
-    implementation fg.deobf("curse.maven:minecolonies-245506:7425051")
+    // Patchouli - 92, 1.21.1 NeoForge
+    implementation "curse.maven:patchouli-306770:6842247"
 
-    implementation fg.deobf("curse.maven:epic-fight-mod-405076:8049910")
-    implementation fg.deobf("curse.maven:epicfight-resurrection-1151542:6931390")
-    implementation fg.deobf("curse.maven:epicfight-resurrection-crash-fix-1520550:8086417")
-    implementation fg.deobf("curse.maven:weapons-of-miracles-epicfight-918614:7517612")
+    // ---------------- MineColonies stack ----------------
+    // BlockUI - 1.0.211-1.21.1-snapshot
+    implementation "curse.maven:blockui-522992:7790469"
+    // Domum Ornamentum - 1.0.228 release, 1.21.1
+    implementation "curse.maven:domum-ornamentum-527361:7585527"
+    // Multi Piston - 1.2.58, 1.21.1
+    implementation "curse.maven:multi-piston-303278:7097877"
+    // Structurize - 1.0.805, 1.21.1
+    implementation "curse.maven:structurize-298744:8398574"
+    // TownTalk - 1.2.0, 1.21.1 NeoForge (only NeoForge release, still current)
+    implementation "curse.maven:towntalk-900364:5653504"
+    // MineColonies - 1.1.1300, 1.21.1 NeoForge
+    implementation "curse.maven:minecolonies-245506:8480342"
 
-    implementation fg.deobf("curse.maven:samurai-dynasty-848381:7394415")
-    implementation fg.deobf("curse.maven:azurelib-817423:8367230")
-    implementation fg.deobf("curse.maven:curios-309927:6418456")
+    // ---------------- Epic Fight stack ----------------
+    // Epic Fight - 21.16.4, mc1.21.1-neoforge
+    implementation "curse.maven:epic-fight-mod-405076:7956628"
 
-    implementation fg.deobf("curse.maven:packet-fixer-689467:7221527")
+    // EpicFight: Resurrection is Forge-only (capped at 1.20.1 / 1.18.2) - no NeoForge build exists.
+    // implementation "curse.maven:epicfight-resurrection-1151542:XXXXXXX"
+    // Its crash-fix companion mod is likewise Forge-only for the same reason.
+    // implementation "curse.maven:epicfight-resurrection-crash-fix-1520550:XXXXXXX"
 
-  if (!gradle.startParameter.taskNames.any { it.toLowerCase().contains('runserver') }) {
-      implementation fg.deobf("curse.maven:smooth-camera-movement-1241658:6612383")
-      implementation fg.deobf("curse.maven:architectury-api-419699:5137938")
+    // Weapons of Miracles - Epic Fight is still Forge/1.20.1-only as of its latest release; no NeoForge port.
+    // implementation "curse.maven:weapons-of-miracles-epicfight-918614:XXXXXXX"
 
-      implementation fg.deobf("curse.maven:ambientsounds-254284:8042994")
-      implementation fg.deobf("curse.maven:creativecore-257814:8304882")
+    // Samurai Dynasty: CurseForge only has a 1.20.1 NeoForge beta. A 1.21.1 NeoForge build exists
+    // on Modrinth (epic-samurais 0.1.1-1.21.1) but was never published to CurseForge, so there's
+    // no curse.maven coordinate for it. Pull it from Modrinth's maven if you need it back.
+    // implementation "curse.maven:samurai-dynasty-848381:XXXXXXX"
 
+    implementation "curse.maven:azurelib-817423:6747999"       // AzureLib - 3.0.21, 1.21.1 NeoForge
+    implementation "curse.maven:curios-309927:6529130"         // Curios API - 9.5.1, 1.21.1
 
-      implementation fg.deobf("curse.maven:particle-rain-421897:8055453")
+    implementation "curse.maven:packet-fixer-689467:7221528"   // Packet Fixer - 3.3.1 (merged jar covers 1.21.1)
+
+    // ---------------- Client-only extras ----------------
+    if (!gradle.startParameter.taskNames.any { it.toLowerCase().contains('runserver') }) {
+        // Smooth Camera Movement has no NeoForge build at all (Forge 1.20.1 / Fabric only).
+        // implementation "curse.maven:smooth-camera-movement-1241658:XXXXXXX"
+
+        // Architectury API - v13.0.8, NeoForge 1.21(.1)
+        implementation "curse.maven:architectury-api-419699:5786327"
+
+        // AmbientSounds 6 - v6.2.1, mc1.21.1 NeoForge
+        implementation "curse.maven:ambientsounds-254284:6978999"
+        // CreativeCore - v2.13.41, mc1.21.1 NeoForge
+        implementation "curse.maven:creativecore-257814:8190065"
+
+        // Particle Rain - v4-beta.6, 1.21.1-neoforge
+        implementation "curse.maven:particle-rain-421897:7725886"
     }
-    implementation fg.deobf("curse.maven:betterdays-895618:7046761")
-    implementation fg.deobf("curse.maven:configured-457570:5180900")
 
-    compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"))
-    compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"))
-    runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
+    implementation "curse.maven:betterdays-895618:7294209"     // Better Days - 1.21.1-3.3.6.2, NeoForge
+    implementation "curse.maven:configured-457570:7276577"     // Configured - 2.6.3, 1.21.1 NeoForge
 }
 
 // -------------------- Resources --------------------
 tasks.named('processResources', ProcessResources).configure {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
     var replaceProperties = [
-            minecraft_version   : minecraft_version,
+            minecraft_version      : minecraft_version,
             minecraft_version_range: minecraft_version_range,
-            forge_version       : forge_version,
-            forge_version_range : forge_version_range,
-            loader_version_range: loader_version_range,
-            mod_id              : mod_id,
-            mod_name            : mod_name,
-            mod_license         : mod_license,
-            mod_version         : mod_version,
-            mod_authors         : mod_authors,
-            mod_description     : mod_description
+            neoforge_version       : neo_version,
+            neoforge_version_range : neo_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+            mod_authors            : mod_authors,
+            mod_description        : mod_description
     ]
 
     inputs.properties replaceProperties
 
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
         expand replaceProperties + [project: project]
-    }
-    from("$buildDir/tmp/compileJava/compileJava-refmap.json") {
-        rename { "${mod_id}.refmap.json" }
     }
 }
 
@@ -257,9 +200,9 @@ java {
     withSourcesJar()
 }
 
-// -------------------- Dev Jar (DEOBF) --------------------
+// -------------------- Jar --------------------
 tasks.named('jar', Jar).configure {
-    archiveBaseName = "EpicColonies-Forge-EFM-${epic_fight_version}"
+    archiveBaseName = "${mod_jar_display_name}-${epic_fight_version}"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
         attributes([
@@ -274,38 +217,17 @@ tasks.named('jar', Jar).configure {
     }
 }
 
-// -------------------- Forge Reobf Wiring --------------------
-// Tell ForgeGradle WHICH jar to reobfuscate
-reobf {
-    jar {}
-}
-
-// Build should ALSO produce a reobf jar
-tasks.named('build') {
-    dependsOn 'reobfJar'
-}
-
-// -------------------- Explicit Production Task --------------------
-tasks.register('releaseJar') {
-    group = 'build'
-    description = 'Build reobfuscated production jar'
-    dependsOn 'jar', 'reobfJar'
-}
-
-// -------------------- Publishing (DEV ONLY) --------------------
+// -------------------- Publishing --------------------
 publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId = 'net.kenji'
-            artifactId = 'epic-colonies-efm-20-14-4'
+            artifactId = "${maven_local_name}-${epic_fight_version}"
             version = '1.4.0'
-
-
-            // Publishes ONLY the deobf dev jar + sources
             from components.java
             pom.withXml {
                 def node = asNode()
-                node.remove(node.dependencies) // 💀 remove all deps
+                node.remove(node.dependencies)
             }
         }
     }
@@ -313,6 +235,7 @@ publishing {
         mavenLocal()
     }
 }
+
 tasks.withType(GenerateModuleMetadata).configureEach {
     enabled = false
 }

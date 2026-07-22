@@ -1,13 +1,11 @@
 package net.kenji.epic_colonies.gameasset.patch.base;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Pair;
 import net.kenji.epic_colonies.api.CitizenPatchData;
 import net.kenji.epic_colonies.compat.CombatBehaviourBase;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
-import net.kenji.epic_colonies.network.ChangeLivingMotion;
 import net.kenji.epic_colonies.network.EpicColoniesPacketHandler;
 import net.kenji.epic_colonies.network.ServerBowActionPacket;
 import net.minecraft.core.BlockPos;
@@ -21,24 +19,21 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.entity.living.LivingEvent;
+import org.jline.utils.Log;
 import yesman.epicfight.api.animation.AnimationManager;
 import yesman.epicfight.api.animation.Animator;
 import yesman.epicfight.api.animation.LivingMotion;
 import yesman.epicfight.api.animation.LivingMotions;
 import yesman.epicfight.api.animation.types.StaticAnimation;
-import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.gameasset.Animations;
-import yesman.epicfight.world.capabilities.entitypatch.Faction;
+import yesman.epicfight.world.capabilities.entitypatch.Factions;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
-import yesman.epicfight.world.capabilities.item.CapabilityItem;
 import yesman.epicfight.world.capabilities.item.Style;
 import yesman.epicfight.world.capabilities.item.WeaponCategory;
 import yesman.epicfight.world.entity.ai.goal.CombatBehaviors;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 public abstract class AbstractExpressiveHumanoidPatch<T extends PathfinderMob> extends HumanoidMobPatch<T> {
@@ -67,6 +62,13 @@ public abstract class AbstractExpressiveHumanoidPatch<T extends PathfinderMob> e
     protected static float MAX_EYE_OFFSET = 0.075F;
     protected static float HEAD_TURN_SPEED_DEG = 8.0F;
 
+    public void debugLogNearestPlayer(String log){
+        Player player = this.getOriginal().level().getNearestPlayer(getOriginal(), 2.0F);
+
+        if(player != null){
+            Log.info(log);
+        }
+    }
 
     protected Player getNearestPlayer(Entity entity){
         Player nearest = entity.level().getNearestPlayer(entity, LOOK_RANGE);
@@ -77,8 +79,8 @@ public abstract class AbstractExpressiveHumanoidPatch<T extends PathfinderMob> e
         }
         return null;
     }
-    public AbstractExpressiveHumanoidPatch(Faction faction) {
-        super(faction);
+    public AbstractExpressiveHumanoidPatch(T entity) {
+        super(entity, Factions.VILLAGER);
     }
 
     public float getJogSpeed(){
@@ -185,8 +187,8 @@ public abstract class AbstractExpressiveHumanoidPatch<T extends PathfinderMob> e
     }
 
     @Override
-    public void tick(LivingEvent.LivingTickEvent event) {
-        super.tick(event);
+    public void preTick() {
+        super.preTick();
         if(lastY == -1 || lastYTickCount <= 0){
             lastY = this.getOriginal().position().y();
             lastYTickCount = 5;
@@ -197,8 +199,8 @@ public abstract class AbstractExpressiveHumanoidPatch<T extends PathfinderMob> e
     }
 
     @Override
-    protected void serverTick(LivingEvent.LivingTickEvent event) {
-        super.serverTick(event);
+    public void preTickServer() {
+        super.preTickServer();
         if(wasUsingBow && this.getCurrentLivingMotion() != EpicColoniesLivingMotions.JOG){
             bowUseCounter++;
         }
@@ -242,60 +244,5 @@ public abstract class AbstractExpressiveHumanoidPatch<T extends PathfinderMob> e
         animator.addLivingAnimation(LivingMotions.DRINK, Animations.BIPED_DRINK);
     }
 
-
-    @Override
-    public void modifyLivingMotionByCurrentItem(boolean onStartTracking){
-        Map<LivingMotion, AssetAccessor<? extends StaticAnimation>> oldLivingAnimations = this.getAnimator().getLivingAnimations();
-        Map<LivingMotion, AssetAccessor<? extends StaticAnimation>> newLivingAnimations = Maps.newHashMap();
-        CapabilityItem mainhandCap = this.getHoldingItemCapability(InteractionHand.MAIN_HAND);
-        CapabilityItem offhandCap = this.getAdvancedHoldingItemCapability(InteractionHand.OFF_HAND);
-        Map<LivingMotion, AssetAccessor<? extends StaticAnimation>> livingMotionModifiers = new HashMap(mainhandCap.getLivingMotionModifier(this, InteractionHand.MAIN_HAND));
-        livingMotionModifiers.putAll(offhandCap.getLivingMotionModifier(this, InteractionHand.OFF_HAND));
-        boolean hasChange = false;
-
-        for(Map.Entry<LivingMotion, AssetAccessor<? extends StaticAnimation>> entry : livingMotionModifiers.entrySet()) {
-            AssetAccessor<? extends StaticAnimation> aniamtion = (AssetAccessor)entry.getValue();
-            if (!oldLivingAnimations.containsKey(entry.getKey())) {
-                hasChange = true;
-            } else if (oldLivingAnimations.get(entry.getKey()) != aniamtion) {
-                hasChange = true;
-            }
-
-            newLivingAnimations.put((LivingMotion)entry.getKey(), aniamtion);
-        }
-
-        if (this.weaponLivingMotions != null && this.weaponLivingMotions.containsKey(mainhandCap.getWeaponCategory())) {
-
-            Map<Style, Set<Pair<LivingMotion, AnimationManager.AnimationAccessor<? extends StaticAnimation>>>> byStyle = (Map)this.weaponLivingMotions.get(mainhandCap.getWeaponCategory());
-            Style style = mainhandCap.getStyle(this);
-            if (byStyle.containsKey(style) || byStyle.containsKey(CapabilityItem.Styles.COMMON)) {
-
-                for(Pair<LivingMotion, AnimationManager.AnimationAccessor<? extends StaticAnimation>> pair : byStyle.getOrDefault(style, byStyle.get(CapabilityItem.Styles.COMMON))) {
-                    newLivingAnimations.put((LivingMotion)pair.getFirst(), (AssetAccessor)pair.getSecond());
-                }
-            }
-        }
-
-        if (!hasChange) {
-            for(LivingMotion oldLivingMotion : oldLivingAnimations.keySet()) {
-                if (!newLivingAnimations.containsKey(oldLivingMotion)) {
-                    hasChange = true;
-                    break;
-                }
-            }
-        }
-
-        if (hasChange || onStartTracking) {
-            this.getAnimator().resetLivingAnimations();
-            Animator var10001 = this.getAnimator();
-            Objects.requireNonNull(var10001);
-            newLivingAnimations.forEach(var10001::addLivingAnimation);
-            if (!this.isLogicalClient()) {
-                ChangeLivingMotion msg = new ChangeLivingMotion(((PathfinderMob)this.original).getId());
-                msg.putEntries(newLivingAnimations.entrySet());
-                EpicColoniesPacketHandler.sendToAll(msg);
-            }
-        }
-    }
 
 }

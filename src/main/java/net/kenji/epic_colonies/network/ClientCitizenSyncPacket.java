@@ -1,24 +1,36 @@
 package net.kenji.epic_colonies.network;
 
+import net.kenji.epic_colonies.EpicColonies;
 import net.kenji.epic_colonies.api.CitizenPatchData;
 import net.kenji.epic_colonies.gameasset.EpicColoniesLivingMotions;
 import net.kenji.epic_colonies.gameasset.patch.CitizenEntityPatch;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.network.NetworkEvent;
+
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jline.utils.Log;
 import yesman.epicfight.api.animation.LivingMotion;
 import yesman.epicfight.api.animation.LivingMotions;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
+import yesman.epicfight.world.capabilities.entitypatch.EntityPatch;
 
 import java.util.UUID;
 import java.util.function.Supplier;
 
-public record ClientCitizenSyncPacket(int entityId, UUID uuid, CitizenPatchData data) {
+public record ClientCitizenSyncPacket(int entityId, UUID uuid, CitizenPatchData data) implements CustomPacketPayload {
+
+    public static final CustomPacketPayload.Type<ClientCitizenSyncPacket> TYPE =
+            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(EpicColonies.MODID, "client_citizen_sync_packet"));
+    public static final StreamCodec<FriendlyByteBuf, ClientCitizenSyncPacket> STREAM_CODEC =
+            StreamCodec.of(ClientCitizenSyncPacket::encode, ClientCitizenSyncPacket::decode);
 
 
     private static int fillNullMotion(LivingMotion motion){
@@ -34,7 +46,7 @@ public record ClientCitizenSyncPacket(int entityId, UUID uuid, CitizenPatchData 
         return LivingMotion.ENUM_MANAGER.get(motionId);
     }
     // Encode: Write data to buffer
-    public static void encode(ClientCitizenSyncPacket packet, FriendlyByteBuf buf) {
+    public static void encode(FriendlyByteBuf buf, ClientCitizenSyncPacket packet) {
         buf.writeInt(packet.entityId);
         buf.writeUUID(packet.uuid)    ;
         buf.writeInt(fillNullMotion(packet.data.currentOptionalMotion));
@@ -64,13 +76,12 @@ public record ClientCitizenSyncPacket(int entityId, UUID uuid, CitizenPatchData 
     }
 
     // Handle: Process the packet on the receiving side
-    public static void handle(ClientCitizenSyncPacket packet, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            if (ctx.get().getDirection().getReceptionSide().isClient()) {
+    public static void handle(ClientCitizenSyncPacket packet, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            if (FMLEnvironment.dist == Dist.CLIENT) {
                 executeOnClient(packet);
             }
         });
-        ctx.get().setPacketHandled(true);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -81,12 +92,15 @@ public record ClientCitizenSyncPacket(int entityId, UUID uuid, CitizenPatchData 
 
         Entity entity = player.level().getEntity(packet.entityId);
         if (entity == null) return;
+        CitizenEntityPatch<?> entityPatch = EpicFightCapabilities.getEntityPatch(entity, CitizenEntityPatch.class);
 
-        entity.getCapability(EpicFightCapabilities.CAPABILITY_ENTITY).ifPresent(cap -> {
-            if (cap instanceof CitizenEntityPatch<?> patch) {
-
-                patch.setCitizenPatchData(packet.data);
-            }
-        });
+        if(entityPatch != null){
+            entityPatch.setCitizenPatchData(packet.data);
+        };
     }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+        }
 }

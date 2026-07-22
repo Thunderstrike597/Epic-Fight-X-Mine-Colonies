@@ -4,7 +4,6 @@ import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.patch.base.AbstractExpressiveHumanoidPatch;
 import net.minecraft.world.entity.PathfinderMob;
-import net.minecraftforge.event.entity.living.LivingEvent;
 import yesman.epicfight.api.animation.*;
 import yesman.epicfight.api.client.animation.Layer;
 import yesman.epicfight.model.armature.HumanoidArmature;
@@ -12,8 +11,8 @@ import yesman.epicfight.world.capabilities.entitypatch.Factions;
 
 public class MercenaryPatch<M extends PathfinderMob> extends AbstractExpressiveHumanoidPatch<M> {
 
-    public MercenaryPatch() {
-        super(Factions.VILLAGER);
+    public MercenaryPatch(M entity) {
+        super(entity);
     }
     @Override
     public boolean overrideRender() {
@@ -21,8 +20,8 @@ public class MercenaryPatch<M extends PathfinderMob> extends AbstractExpressiveH
     }
 
     @Override
-    public void onAddedToWorld() {
-        super.onAddedToWorld();
+    public void onAddedToLevel() {
+        super.onAddedToLevel();
         animator.playAnimation(EpicColoniesAnimations.CITIZEN_BLINK, 0F);
         animator.playAnimation(EpicColoniesAnimations.CITIZEN_EYES_MOVE, 0F);
 
@@ -33,8 +32,8 @@ public class MercenaryPatch<M extends PathfinderMob> extends AbstractExpressiveH
     }
 
     @Override
-    protected void clientTick(LivingEvent.LivingTickEvent event) {
-        super.clientTick(event);
+    public void postTickClient() {
+        super.postTickClient();
         AnimationPlayer highestAnimPlayer = this.getClientAnimator().getCompositeLayer(Layer.Priority.HIGHEST).animationPlayer;
         AnimationPlayer middleAnimPlayer = this.getClientAnimator().getCompositeLayer(Layer.Priority.MIDDLE).animationPlayer;
 

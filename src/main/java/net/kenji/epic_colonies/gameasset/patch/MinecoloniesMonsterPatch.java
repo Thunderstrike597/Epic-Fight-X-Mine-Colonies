@@ -4,7 +4,6 @@ import com.minecolonies.api.entity.mobs.AbstractEntityMinecoloniesMonster;
 import net.kenji.epic_colonies.gameasset.EpicColoniesAnimations;
 import net.kenji.epic_colonies.gameasset.EpicColoniesArmatures;
 import net.kenji.epic_colonies.gameasset.patch.base.AbstractExpressiveHumanoidPatch;
-import net.minecraftforge.event.entity.living.LivingEvent;
 import yesman.epicfight.api.animation.*;
 import yesman.epicfight.api.client.animation.Layer;
 import yesman.epicfight.model.armature.HumanoidArmature;
@@ -12,14 +11,14 @@ import yesman.epicfight.world.capabilities.entitypatch.Factions;
 
 public class MinecoloniesMonsterPatch<M extends AbstractEntityMinecoloniesMonster> extends AbstractExpressiveHumanoidPatch<M> {
 
-    public MinecoloniesMonsterPatch() {
-        super(Factions.VILLAGER);
+    public MinecoloniesMonsterPatch(M entity) {
+        super(entity);
     }
 
 
     @Override
-    public void onAddedToWorld() {
-        super.onAddedToWorld();
+    public void onAddedToLevel() {
+        super.onAddedToLevel();
         animator.playAnimation(EpicColoniesAnimations.CITIZEN_BLINK, 0F);
         animator.playAnimation(EpicColoniesAnimations.CITIZEN_EYES_MOVE, 0F);
     }
@@ -29,8 +28,8 @@ public class MinecoloniesMonsterPatch<M extends AbstractEntityMinecoloniesMonste
     }
 
     @Override
-    protected void clientTick(LivingEvent.LivingTickEvent event) {
-        super.clientTick(event);
+    public void postTickClient() {
+        super.postTickClient();
         AnimationPlayer highestAnimPlayer = this.getClientAnimator().getCompositeLayer(Layer.Priority.HIGHEST).animationPlayer;
         AnimationPlayer middleAnimPlayer = this.getClientAnimator().getCompositeLayer(Layer.Priority.MIDDLE).animationPlayer;
 

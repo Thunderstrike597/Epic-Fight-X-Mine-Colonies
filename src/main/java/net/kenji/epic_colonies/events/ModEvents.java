@@ -12,21 +12,19 @@ import net.minecraft.commands.Commands;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import yesman.epicfight.api.forgeevent.EntityPatchRegistryEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
+import yesman.epicfight.api.event.types.registry.EntityPatchRegistryEvent;
 import yesman.epicfight.gameasset.Armatures;
 
-@Mod.EventBusSubscriber(modid = EpicColonies.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = EpicColonies.MODID)
 public class ModEvents {
+
     public static void registerPatchedEntities(EntityPatchRegistryEvent event) {
-        for (MobPatchFactory.MobPatchDefinitions def : MobPatchFactory.mobPatches) {
-            event.getTypeEntry().put(def.entityType, def.mobPatch);
-        }
+        MobPatchFactory.registerPatchedEntities(event);
     }
 
     public static void commonSetup(FMLCommonSetupEvent event) {

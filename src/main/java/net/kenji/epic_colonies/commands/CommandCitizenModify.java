@@ -11,8 +11,8 @@ import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import net.minecraft.commands.CommandRuntimeException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -78,12 +78,7 @@ public class CommandCitizenModify {
                 return false;
             } else {
                 IColony colony;
-                try {
-                    colony = ColonyIdArgument.getColony(context, "colonyID");
-                } catch (CommandRuntimeException var5) {
-                    return false;
-                }
-
+                colony = ColonyIdArgument.getColony(context, "colonyID");
                 return IMCCommand.isPlayerOped((Player)sender) || colony.getPermissions().getRank((Player)sender).isColonyManager();
             }
         }
